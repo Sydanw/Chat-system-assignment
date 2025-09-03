@@ -22,6 +22,12 @@ router.get('/:id', (req, res) => {
     }
 });
 
+router.post('/', requireSuperAdmin, (req, res) => {
+  console.log('Creating user:', req.body);
+  // ... existing code
+  console.log('User created, saved to:', dataManager.dataFile);
+});
+
 // Update user (promote/demote roles)
 router.put('/:id', (req, res) => {
     const userId = parseInt(req.params.id);

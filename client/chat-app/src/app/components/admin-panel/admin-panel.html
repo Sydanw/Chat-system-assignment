@@ -1,63 +1,294 @@
 <div class="admin-panel">
-  <div class="section-title">Super Admin Tools</div>
-  
-  <div class="admin-section" *ngIf="isSuperAdmin">
-    <h5>User Management</h5>
-    <div class="user-list" *ngIf="users.length > 0">
-      <div class="user-item" *ngFor="let user of users">
-        <div class="user-info">
-          <strong>{{ user.username }}</strong>
-          <span class="role-badge" [ngClass]="getRoleClass(user.roles)">
-            {{ user.roles.join(', ') }}
-          </span>
-        </div>
-        <div class="user-actions">
-          <button 
-            class="btn btn-success btn-sm" 
-            (click)="promoteToGroupAdmin(user)"
-            *ngIf="!user.roles.includes('Group Admin') && !user.roles.includes('Super Admin')">
-            Promote to Group Admin
-          </button>
-          <button 
-            class="btn btn-success btn-sm" 
-            (click)="promoteToSuperAdmin(user)"
-            *ngIf="!user.roles.includes('Super Admin')">
-            Promote to Super Admin
-          </button>
-          <button 
-            class="btn btn-danger btn-sm" 
-            (click)="removeUser(user)"
-            *ngIf="user.username !== currentUser?.username">
-            Remove User
-          </button>
-        </div>
-      </div>
+  <!-- Header -->
+  <div class="admin-header">
+    <h2>Super Admin Dashboard</h2>
+    <button 
+      class="btn btn-secondary btn-refresh" 
+      (click)="refreshData()"
+      [disabled]="loading"
+      title="Refresh data">
+      🔄 Refresh
+    </button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-indicator">
+      <div class="spinner"></div>
+      <span>Processing...</span>
     </div>
   </div>
-  
+
+  <!-- Messages -->
+  <div *ngIf="error" class="alert alert-error" (click)="clearMessages()">
+    <div class="alert-content">
+      <span class="alert-icon">❌</span>
+      <strong>Error:</strong> {{ error }}
+    </div>
+    <button type="button" class="close-btn" title="Close">&times;</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success" (click)="clearMessages()">
+    <div class="alert-content">
+      <span class="alert-icon">✅</span>
+      <strong>Success:</strong> {{ successMessage }}
+    </div>
+    <button type="button" class="close-btn" title="Close">&times;</button>
+  </div>
+
+  <!-- System Overview Section -->
   <div class="admin-section">
-    <h5>System Overview</h5>
+    <h3>📊 System Overview</h3>
+    
     <div class="stats-grid">
-      <div class="stat-item">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
         <div class="stat-number">{{ getTotalUsers() }}</div>
         <div class="stat-label">Total Users</div>
       </div>
-      <div class="stat-item">
+      
+      <div class="stat-card">
+        <div class="stat-icon">🏢</div>
         <div class="stat-number">{{ getTotalGroups() }}</div>
         <div class="stat-label">Total Groups</div>
       </div>
-      <div class="stat-item">
+      
+      <div class="stat-card">
+        <div class="stat-icon">💬</div>
         <div class="stat-number">{{ getTotalChannels() }}</div>
         <div class="stat-label">Active Channels</div>
       </div>
     </div>
+
+    <!-- Role Breakdown -->
+    <div class="role-breakdown" *ngIf="systemStats">
+      <h4>Users by Role</h4>
+      <div class="role-stats">
+        <div class="role-stat super-admin">
+          <span class="role-count">{{ systemStats.usersByRole.superAdmins }}</span>
+          <span class="role-name">Super Admins</span>
+        </div>
+        <div class="role-stat group-admin">
+          <span class="role-count">{{ systemStats.usersByRole.groupAdmins }}</span>
+          <span class="role-name">Group Admins</span>
+        </div>
+        <div class="role-stat regular-user">
+          <span class="role-count">{{ systemStats.usersByRole.regularUsers }}</span>
+          <span class="role-name">Regular Users</span>
+        </div>
+      </div>
+    </div>
   </div>
-  
+
+  <!-- User Management Section -->
   <div class="admin-section">
-    <h5>Reports & Logs</h5>
-    <div class="reports-actions">
-      <button class="btn btn-primary">View Reports</button>
-      <button class="btn btn-secondary">System Logs</button>
+    <h3>👑 User Management</h3>
+    
+    <div class="management-card">
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button 
+          class="btn btn-primary" 
+          (click)="toggleCreateForm()"
+          [disabled]="loading">
+          {{ showCreateUserForm ? '✖️ Cancel' : '➕ Create New User' }}
+        </button>
+        <div class="user-count">
+          Total Users: <strong>{{ users.length }}</strong>
+        </div>
+      </div>
+
+      <!-- Create User Form -->
+      <div *ngIf="showCreateUserForm" class="create-user-form">
+        <h5>Create New User</h5>
+        <form (ngSubmit)="createUser()" #createForm="ngForm" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="username">Username *</label>
+              <input 
+                type="text" 
+                id="username"
+                name="username"
+                [(ngModel)]="newUser.username" 
+                required
+                maxlength="50"
+                [class.error]="hasFieldError('username')"
+                class="form-control"
+                placeholder="Enter username">
+              <div *ngIf="hasFieldError('username')" class="field-error">
+                {{ getFieldError('username') }}
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input 
+                type="email" 
+                id="email"
+                name="email"
+                [(ngModel)]="newUser.email" 
+                required
+                maxlength="100"
+                [class.error]="hasFieldError('email')"
+                class="form-control"
+                placeholder="user@example.com">
+              <div *ngIf="hasFieldError('email')" class="field-error">
+                {{ getFieldError('email') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input 
+                type="password" 
+                id="password"
+                name="password"
+                [(ngModel)]="newUser.password" 
+                maxlength="50"
+                [class.error]="hasFieldError('password')"
+                class="form-control"
+                placeholder="Default: 123">
+              <div *ngIf="hasFieldError('password')" class="field-error">
+                {{ getFieldError('password') }}
+              </div>
+              <small class="form-help">Leave blank to use default password (123)</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="role">Initial Role</label>
+              <select 
+                id="role" 
+                name="role"
+                class="form-control"
+                (change)="onRoleChange($event)">
+                <option *ngFor="let role of availableRoles" [value]="role.value">
+                  {{ role.label }}
+                </option>
+              </select>
+              <small class="form-help">You can change this later</small>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button 
+              type="submit" 
+              class="btn btn-success"
+              [disabled]="loading">
+              ✅ Create User
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              (click)="resetCreateForm()"
+              [disabled]="loading">
+              ❌ Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Users List -->
+      <div class="users-list" *ngIf="users.length > 0">
+        <h5>All Users</h5>
+        <div class="user-table-container">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Groups</th>
+                <th class="actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users; trackBy: trackByUserId" class="user-row">
+                <td class="user-info">
+                  <div class="user-details">
+                    <div class="username">{{ user.username }}</div>
+                    <div class="email">{{ user.email }}</div>
+                  </div>
+                </td>
+                <td class="role">
+                  <span [class]="getUserRoleBadgeClass(user)">
+                    {{ getUserRoleDisplay(user) }}
+                  </span>
+                </td>
+                <td class="groups">
+                  <span class="group-count">{{ user.groups.length }}</span>
+                  <small>groups</small>
+                </td>
+                <td class="actions">
+                  <div class="action-buttons">
+                    <!-- Promote to Group Admin -->
+                    <button 
+                      *ngIf="canPromoteToGroupAdmin(user)"
+                      class="btn btn-sm btn-warning"
+                      (click)="promoteToGroupAdmin(user)"
+                      [disabled]="loading"
+                      title="Promote to Group Admin">
+                      ⬆️ Group Admin
+                    </button>
+                    
+                    <!-- Promote to Super Admin -->
+                    <button 
+                      *ngIf="canPromoteToSuperAdmin(user)"
+                      class="btn btn-sm btn-info"
+                      (click)="promoteToSuperAdmin(user)"
+                      [disabled]="loading"
+                      title="Promote to Super Admin">
+                      👑 Super Admin
+                    </button>
+                    
+                    <!-- Already at highest role indicator -->
+                    <span 
+                      *ngIf="!canPromoteToSuperAdmin(user) && !canPromoteToGroupAdmin(user)"
+                      class="max-role-indicator"
+                      title="User has maximum role">
+                      ✨ Max Role
+                    </span>
+                    
+                    <!-- Remove User -->
+                    <button 
+                      class="btn btn-sm btn-danger"
+                      (click)="removeUser(user)"
+                      [disabled]="loading"
+                      title="Remove User">
+                      🗑️ Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="users.length === 0 && !loading" class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h4>No Users Found</h4>
+        <p>Start by creating your first user using the button above.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports & Logs Section -->
+  <div class="admin-section">
+    <h3>📈 Reports & Logs</h3>
+    <div class="management-card">
+      <div class="action-buttons">
+        <button class="btn btn-primary" disabled title="Coming in Phase 2">
+          📊 View Reports
+        </button>
+        <button class="btn btn-info" disabled title="Coming in Phase 2">
+          📋 System Logs
+        </button>
+      </div>
+      <p class="coming-soon">
+        📋 Reports and logging features will be available in Phase 2 of the assignment.
+      </p>
     </div>
   </div>
 </div>

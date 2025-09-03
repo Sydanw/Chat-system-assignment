@@ -49,9 +49,10 @@
 }
 
 .main-content {
-  display: flex;
-  flex: 1;
-  min-height: 0;
+  display: grid;
+  grid-template-columns: 200px 1fr 300px;
+  gap: 20px;
+  height: calc(100vh - 120px);
 }
 
 .sidebar {
@@ -105,6 +106,14 @@
 
 .channel-info {
   margin-top: 5px;
+}
+
+
+.channel-view-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
 }
 
 .messages-container {
@@ -165,11 +174,13 @@
 }
 
 .admin-panel {
-  width: 300px;
-  background: #fff3cd;
-  padding: 15px;
-  border: 1px solid #ffeaa7;
+  max-height: 400px;
   overflow-y: auto;
+  margin: 10px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .admin-section {

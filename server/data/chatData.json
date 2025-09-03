@@ -305,6 +305,22 @@
       "username": "super",
       "content": "working onit",
       "timestamp": "2025-09-03T21:21:55.003Z"
+    },
+    {
+      "id": 1756935362377,
+      "channelId": 7,
+      "userId": 1,
+      "username": "super",
+      "content": "How much was the sale?",
+      "timestamp": "2025-09-03T21:36:02.377Z"
+    },
+    {
+      "id": 1756935373871,
+      "channelId": 7,
+      "userId": 3,
+      "username": "john_doe",
+      "content": "Not much.",
+      "timestamp": "2025-09-03T21:36:13.871Z"
     }
   ]
 }

@@ -39,6 +39,21 @@
         <button class="btn btn-primary btn-sm mt-2">Request Group Access</button>
         <button class="btn btn-danger btn-sm mt-1">Leave Group</button>
       </div>
+
+      <!-- Admin Panel Links -->
+      <div class="admin-section" *ngIf="isSuperAdmin()">
+        <div class="section-title">Super Admin Tools</div>
+        <a routerLink="/admin" class="admin-link">
+          👑 Super Admin Panel
+        </a>
+      </div>
+
+      <div class="admin-section" *ngIf="isGroupAdmin()">
+        <div class="section-title">Group Admin Tools</div>
+        <a routerLink="/groups" class="admin-link">
+          🏢 Group Management
+        </a>
+      </div>
     </div>
 
     <!-- Chat Area -->
@@ -64,9 +79,12 @@
       </div>
     </div>
 
-    <!-- Admin Panel -->
+    <!-- Super Admin Panel -->
     <div class="admin-panel" *ngIf="isSuperAdmin()">
-      <div class="section-title">Super Admin Tools</div>
+      <div class="section-title">Super Admin Dashboard</div>
+      
+      <!-- Use AdminPanel component directly -->
+      <app-admin-panel></app-admin-panel>
       
       <div class="admin-section">
         <strong>User Management</strong>
@@ -91,8 +109,12 @@
       </div>
     </div>
 
+    <!-- Group Admin Panel -->
     <div class="admin-panel" *ngIf="isGroupAdmin()">
       <div class="section-title">Group Admin Tools</div>
+      
+      <!-- Use GroupManagement component directly -->
+      <app-group-management></app-group-management>
       
       <div class="admin-section">
         <strong>Group: {{ selectedGroup?.name || 'Development Team' }}</strong>
@@ -115,6 +137,11 @@
           <button class="btn btn-success btn-xs ms-2">Approve</button>
         </div>
       </div>
+    </div>
+
+    <!-- Channel View Component (always visible) -->
+    <div class="channel-view-section">
+      <app-channel-view></app-channel-view>
     </div>
   </div>
 
