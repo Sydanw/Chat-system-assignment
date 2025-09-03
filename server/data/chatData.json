@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "super",
+      "email": "super@admin.com",
+      "password": "123",
+      "roles": [
+        "Super Admin"
+      ],
+      "groups": []
+    }
+  ],
+  "groups": [],
+  "channels": []
+}

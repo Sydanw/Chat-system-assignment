@@ -50,8 +50,10 @@ class DataManager {
     }
 
     createUser(userData) {
+        // Fix: Handle empty users array
+        const maxId = this.data.users.length > 0 ? Math.max(...this.data.users.map(u => u.id)) : 0;
         const newUser = {
-            id: Math.max(...this.data.users.map(u => u.id)) + 1,
+            id: maxId + 1,
             ...userData,
             roles: userData.roles || ['User'],
             groups: []
@@ -86,9 +88,15 @@ class DataManager {
         return this.data.groups;
     }
 
+    getGroupById(id) {
+        return this.data.groups.find(group => group.id === id);
+    }
+
     createGroup(groupData) {
+        // Fix: Handle empty groups array
+        const maxId = this.data.groups.length > 0 ? Math.max(...this.data.groups.map(g => g.id)) : 0;
         const newGroup = {
-            id: Math.max(0, ...this.data.groups.map(g => g.id)) + 1,
+            id: maxId + 1,
             ...groupData,
             members: [],
             admins: [groupData.createdBy],
@@ -99,19 +107,80 @@ class DataManager {
         return newGroup;
     }
 
+    updateGroup(id, updates) {
+        const groupIndex = this.data.groups.findIndex(group => group.id === id);
+        if (groupIndex !== -1) {
+            this.data.groups[groupIndex] = { ...this.data.groups[groupIndex], ...updates };
+            this.saveData();
+            return this.data.groups[groupIndex];
+        }
+        return null;
+    }
+
+    deleteGroup(id) {
+        const groupIndex = this.data.groups.findIndex(group => group.id === id);
+        if (groupIndex !== -1) {
+            // Also remove associated channels
+            this.data.channels = this.data.channels.filter(c => c.groupId !== id);
+            this.data.groups.splice(groupIndex, 1);
+            this.saveData();
+            return true;
+        }
+        return false;
+    }
+
     // Channel operations
     getChannels() {
         return this.data.channels;
     }
 
+    getChannelById(id) {
+        return this.data.channels.find(channel => channel.id === id);
+    }
+
+    getChannelsByGroupId(groupId) {
+        return this.data.channels.filter(channel => channel.groupId === groupId);
+    }
+
     createChannel(channelData) {
+        // Fix: Handle empty channels array
+        const maxId = this.data.channels.length > 0 ? Math.max(...this.data.channels.map(c => c.id)) : 0;
         const newChannel = {
-            id: Math.max(0, ...this.data.channels.map(c => c.id)) + 1,
-            ...channelData
+            id: maxId + 1,
+            ...channelData,
+            members: channelData.members || []
         };
         this.data.channels.push(newChannel);
         this.saveData();
         return newChannel;
+    }
+
+    updateChannel(id, updates) {
+        const channelIndex = this.data.channels.findIndex(channel => channel.id === id);
+        if (channelIndex !== -1) {
+            this.data.channels[channelIndex] = { ...this.data.channels[channelIndex], ...updates };
+            this.saveData();
+            return this.data.channels[channelIndex];
+        }
+        return null;
+    }
+
+    deleteChannel(id) {
+        const channelIndex = this.data.channels.findIndex(channel => channel.id === id);
+        if (channelIndex !== -1) {
+            const channel = this.data.channels[channelIndex];
+            
+            // Remove channel from group's channels array
+            const group = this.data.groups.find(g => g.id === channel.groupId);
+            if (group) {
+                group.channels = group.channels.filter(cId => cId !== id);
+            }
+            
+            this.data.channels.splice(channelIndex, 1);
+            this.saveData();
+            return true;
+        }
+        return false;
     }
 }
 
