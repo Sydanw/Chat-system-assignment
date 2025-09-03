@@ -18,9 +18,15 @@ export class GroupManagement implements OnInit {
   @Input() currentUser: User | null = null;
   @Input() selectedGroup: Group | null = null;
   @Input() channels: Channel[] = [];
+  @Input() joinRequests: any[] = [];
 
   newChannelName: string = '';
   newChannelDescription: string = '';
+  selectedUserId: number = 0;
+  
+  showCreateChannelForm: boolean = false;
+  showMemberManagement: boolean = false;
+  showAddUserForm: boolean = false;
 
   constructor(
     private groupService: GroupService,
@@ -41,8 +47,12 @@ export class GroupManagement implements OnInit {
       this.channelService.createChannel(channelData).subscribe({
         next: (response) => {
           console.log('Channel created successfully');
+          if (response.success) {
+            this.channels.push(response.channel);
+          }
           this.newChannelName = '';
           this.newChannelDescription = '';
+          this.showCreateChannelForm = false;
         },
         error: (error) => {
           console.error('Error creating channel:', error);
@@ -52,21 +62,26 @@ export class GroupManagement implements OnInit {
   }
 
   deleteChannel(channel: Channel): void {
-    this.channelService.deleteChannel(channel.id).subscribe({
-      next: () => {
-        console.log('Channel deleted successfully');
-      },
-      error: (error) => {
-        console.error('Error deleting channel:', error);
-      }
-    });
+    if (confirm(`Are you sure you want to delete channel #${channel.name}?`)) {
+      this.channelService.deleteChannel(channel.id).subscribe({
+        next: () => {
+          console.log('Channel deleted successfully');
+          this.channels = this.channels.filter(c => c.id !== channel.id);
+        },
+        error: (error) => {
+          console.error('Error deleting channel:', error);
+        }
+      });
+    }
   }
 
   addUserToGroup(userId: number): void {
-    if (this.selectedGroup) {
+    if (this.selectedGroup && userId) {
       this.groupService.addUserToGroup(this.selectedGroup.id, userId).subscribe({
         next: () => {
           console.log('User added to group successfully');
+          this.selectedUserId = 0;
+          this.showAddUserForm = false;
         },
         error: (error) => {
           console.error('Error adding user to group:', error);
@@ -86,5 +101,14 @@ export class GroupManagement implements OnInit {
         }
       });
     }
+  }
+
+  approveRequest(request: any): void {
+    this.addUserToGroup(request.userId);
+    this.joinRequests = this.joinRequests.filter(r => r !== request);
+  }
+
+  rejectRequest(request: any): void {
+    this.joinRequests = this.joinRequests.filter(r => r !== request);
   }
 }

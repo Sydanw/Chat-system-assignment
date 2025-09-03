@@ -1,1 +1,101 @@
-<p>group-management works!</p>
+<div class="group-management">
+  <div class="section-title">Group Admin Tools</div>
+  
+  <div class="management-section" *ngIf="selectedGroup">
+    <h5>Group: {{ selectedGroup.name }}</h5>
+    <div class="group-actions">
+      <button class="btn btn-primary" (click)="showCreateChannelForm = !showCreateChannelForm">
+        Add Channel
+      </button>
+      <button class="btn btn-info" (click)="showMemberManagement = !showMemberManagement">
+        Manage Members
+      </button>
+    </div>
+    
+    <div class="create-channel-form" *ngIf="showCreateChannelForm">
+      <h6>Create New Channel</h6>
+      <div class="form-group">
+        <label for="channelName">Channel Name</label>
+        <input 
+          id="channelName"
+          type="text" 
+          class="form-control" 
+          [(ngModel)]="newChannelName" 
+          placeholder="Enter channel name">
+      </div>
+      <div class="form-group">
+        <label for="channelDescription">Description</label>
+        <textarea 
+          id="channelDescription"
+          class="form-control" 
+          [(ngModel)]="newChannelDescription" 
+          placeholder="Enter channel description"
+          rows="3">
+        </textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-success" (click)="createChannel()">Create Channel</button>
+        <button class="btn btn-secondary" (click)="showCreateChannelForm = false">Cancel</button>
+      </div>
+    </div>
+    
+    <div class="member-management" *ngIf="showMemberManagement">
+      <h6>Member Management</h6>
+      <div class="member-actions">
+        <button class="btn btn-success" (click)="showAddUserForm = !showAddUserForm">
+          Add User to Group
+        </button>
+      </div>
+      
+      <div class="add-user-form" *ngIf="showAddUserForm">
+        <div class="form-group">
+          <label for="userId">User ID</label>
+          <input 
+            id="userId"
+            type="number" 
+            class="form-control" 
+            [(ngModel)]="selectedUserId" 
+            placeholder="Enter user ID">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-success" (click)="addUserToGroup(selectedUserId)">Add User</button>
+          <button class="btn btn-secondary" (click)="showAddUserForm = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="channels-section" *ngIf="channels.length > 0">
+    <h6>Channels in {{ selectedGroup?.name }}</h6>
+    <div class="channel-list">
+      <div class="channel-item" *ngFor="let channel of channels">
+        <div class="channel-info">
+          <strong># {{ channel.name }}</strong>
+          <span class="channel-description">{{ channel.description }}</span>
+        </div>
+        <div class="channel-actions">
+          <button class="btn btn-danger btn-sm" (click)="deleteChannel(channel)">
+            Delete Channel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="requests-section" *ngIf="joinRequests.length > 0">
+    <h6>Join Requests</h6>
+    <div class="request-list">
+      <div class="request-item" *ngFor="let request of joinRequests">
+        <span>{{ request.username }} wants to join</span>
+        <div class="request-actions">
+          <button class="btn btn-success btn-sm" (click)="approveRequest(request)">
+            Approve
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="rejectRequest(request)">
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

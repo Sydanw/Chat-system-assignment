@@ -5,12 +5,16 @@ import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
+import { SessionService } from '../../services/session.service';
 import { Router } from '@angular/router';
+import { AdminPanel } from '../admin-panel/admin-panel';
+import { GroupManagement } from '../group-management/group-management';
+import { ChannelView } from '../channel-view/channel-view';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminPanel, GroupManagement, ChannelView],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -36,11 +40,13 @@ export class DashboardComponent implements OnInit {
     private userService: UserService,
     private groupService: GroupService,
     private channelService: ChannelService,
+    private sessionService: SessionService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.currentUser = this.getCurrentUser();
+    this.sessionService.startSession();
     this.loadInitialData();
   }
 
@@ -71,6 +77,7 @@ export class DashboardComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Error loading users:', error);
+        this.users = this.getDefaultUsers();
       }
     });
   }
@@ -107,7 +114,7 @@ export class DashboardComponent implements OnInit {
 
   loadJoinRequests(): void {
     this.joinRequests = [
-      { username: 'new_user', groupId: 1 }
+      { username: 'new_user', userId: 4, groupId: 1 }
     ];
   }
 
@@ -115,6 +122,14 @@ export class DashboardComponent implements OnInit {
     this.totalUsers = this.users.length || 25;
     this.totalGroups = this.groups.length || 8;
     this.totalChannels = this.channels.length || 15;
+  }
+
+  getDefaultUsers(): any[] {
+    return [
+      { id: 1, username: 'super', roles: ['Super Admin'] },
+      { id: 2, username: 'group_admin', roles: ['Group Admin'] },
+      { id: 3, username: 'john_doe', roles: ['User'] }
+    ];
   }
 
   getDefaultGroups(): any[] {
@@ -163,47 +178,65 @@ export class DashboardComponent implements OnInit {
   getDefaultMessages(): any[] {
     if (this.isSuperAdmin()) {
       return [
-        { username: 'john_doe', content: 'Hello everyone!' },
-        { username: 'admin_user', content: 'Welcome to the channel' },
-        { username: 'super', content: 'System running smoothly' }
+        { username: 'john_doe', content: 'Hello everyone!', timestamp: new Date() },
+        { username: 'admin_user', content: 'Welcome to the channel', timestamp: new Date() },
+        { username: 'super', content: 'System running smoothly', timestamp: new Date() }
       ];
     } else if (this.isGroupAdmin()) {
       return [
-        { username: 'developer1', content: 'Working on the new feature' },
-        { username: 'group_admin', content: 'Great progress team!' },
-        { username: 'tester2', content: 'Found a bug in module X' }
+        { username: 'developer1', content: 'Working on the new feature', timestamp: new Date() },
+        { username: 'group_admin', content: 'Great progress team!', timestamp: new Date() },
+        { username: 'tester2', content: 'Found a bug in module X', timestamp: new Date() }
       ];
     } else {
       return [
-        { username: 'alice', content: 'Good morning everyone!' },
-        { username: 'bob', content: 'Has anyone seen the latest update?' },
-        { username: 'charlie', content: 'Yes, looks great!' },
-        { username: 'john_doe', content: 'I agree, very impressed' }
+        { username: 'alice', content: 'Good morning everyone!', timestamp: new Date() },
+        { username: 'bob', content: 'Has anyone seen the latest update?', timestamp: new Date() },
+        { username: 'charlie', content: 'Yes, looks great!', timestamp: new Date() },
+        { username: 'john_doe', content: 'I agree, very impressed', timestamp: new Date() }
       ];
     }
   }
 
   selectGroup(group: any): void {
     this.selectedGroup = group;
+    this.loadChannelsForGroup(group.id);
   }
 
   selectChannel(channel: any): void {
     this.selectedChannel = channel;
+    this.loadMessagesForChannel(channel.id);
+  }
+
+  loadChannelsForGroup(groupId: number): void {
+    this.channelService.getChannelsByGroupId(groupId).subscribe({
+      next: (channels: any) => {
+        this.channels = channels || this.getDefaultChannels().filter(c => c.groupId === groupId);
+      },
+      error: (error: any) => {
+        console.error('Error loading channels for group:', error);
+        this.channels = this.getDefaultChannels().filter(c => c.groupId === groupId);
+      }
+    });
+  }
+
+  loadMessagesForChannel(channelId: number): void {
+    this.messages = this.getDefaultMessages();
   }
 
   sendMessage(): void {
     if (this.messageText.trim()) {
       this.messages.push({
         username: this.currentUser?.username || 'You',
-        content: this.messageText
+        content: this.messageText,
+        timestamp: new Date()
       });
       this.messageText = '';
     }
   }
 
   logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/home']);
+    this.sessionService.endSession();
   }
 
   isSuperAdmin(): boolean {

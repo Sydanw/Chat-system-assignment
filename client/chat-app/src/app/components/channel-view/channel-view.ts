@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Channel } from '../../models/channel.model';
@@ -11,36 +11,54 @@ import { User } from '../../models/user.model';
   templateUrl: './channel-view.html',
   styleUrl: './channel-view.css'
 })
-export class ChannelView implements OnInit {
-  @Input() channel: Channel | null = null;
+export class ChannelView implements OnInit, AfterViewChecked {
+  @Input() selectedChannel: Channel | null = null;
   @Input() currentUser: User | null = null;
+  @Input() messages: any[] = [];
+  @Input() onlineMembers: number = 0;
   
-  messages: any[] = [];
+  @ViewChild('messagesArea') private messagesArea!: ElementRef;
+  
   messageText: string = '';
-  memberCount: number = 15;
+
+  constructor() {}
 
   ngOnInit(): void {
-    this.loadMessages();
   }
 
-  loadMessages(): void {
-    this.messages = [
-      { username: 'alice', text: 'Good morning everyone!', timestamp: new Date() },
-      { username: 'bob', text: 'Has anyone seen the latest update?', timestamp: new Date() },
-      { username: 'charlie', text: 'Yes, looks great!', timestamp: new Date() },
-      { username: 'john_doe', text: 'I agree, very impressed', timestamp: new Date() }
-    ];
+  ngAfterViewChecked(): void {
+    this.scrollToBottom();
   }
 
   sendMessage(): void {
     if (this.messageText.trim() && this.currentUser) {
       const newMessage = {
         username: this.currentUser.username,
-        text: this.messageText.trim(),
-        timestamp: new Date()
+        content: this.messageText.trim(),
+        timestamp: new Date(),
+        channelId: this.selectedChannel?.id
       };
+      
       this.messages.push(newMessage);
       this.messageText = '';
+      
+      console.log('Message sent:', newMessage);
+    }
+  }
+
+  formatTimestamp(timestamp: Date): string {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  private scrollToBottom(): void {
+    try {
+      if (this.messagesArea) {
+        this.messagesArea.nativeElement.scrollTop = this.messagesArea.nativeElement.scrollHeight;
+      }
+    } catch (err) {
+      console.error('Error scrolling to bottom:', err);
     }
   }
 }

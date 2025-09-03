@@ -1,1 +1,63 @@
-<p>admin-panel works!</p>
+<div class="admin-panel">
+  <div class="section-title">Super Admin Tools</div>
+  
+  <div class="admin-section" *ngIf="isSuperAdmin">
+    <h5>User Management</h5>
+    <div class="user-list" *ngIf="users.length > 0">
+      <div class="user-item" *ngFor="let user of users">
+        <div class="user-info">
+          <strong>{{ user.username }}</strong>
+          <span class="role-badge" [ngClass]="getRoleClass(user.roles)">
+            {{ user.roles.join(', ') }}
+          </span>
+        </div>
+        <div class="user-actions">
+          <button 
+            class="btn btn-success btn-sm" 
+            (click)="promoteToGroupAdmin(user)"
+            *ngIf="!user.roles.includes('Group Admin') && !user.roles.includes('Super Admin')">
+            Promote to Group Admin
+          </button>
+          <button 
+            class="btn btn-success btn-sm" 
+            (click)="promoteToSuperAdmin(user)"
+            *ngIf="!user.roles.includes('Super Admin')">
+            Promote to Super Admin
+          </button>
+          <button 
+            class="btn btn-danger btn-sm" 
+            (click)="removeUser(user)"
+            *ngIf="user.username !== currentUser?.username">
+            Remove User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="admin-section">
+    <h5>System Overview</h5>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-number">{{ getTotalUsers() }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ getTotalGroups() }}</div>
+        <div class="stat-label">Total Groups</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ getTotalChannels() }}</div>
+        <div class="stat-label">Active Channels</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="admin-section">
+    <h5>Reports & Logs</h5>
+    <div class="reports-actions">
+      <button class="btn btn-primary">View Reports</button>
+      <button class="btn btn-secondary">System Logs</button>
+    </div>
+  </div>
+</div>

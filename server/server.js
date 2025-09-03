@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const path = require('path');
 
 // Import route modules
@@ -12,8 +13,22 @@ const channelRoutes = require('./routes/channels');
 const app = express();
 const PORT = 3000;
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'default-dev-secret-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 30 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true
+  }
+}));
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:4200',
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
