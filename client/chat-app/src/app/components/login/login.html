@@ -1,0 +1,50 @@
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+  <div class="card shadow-lg" style="width: 400px;">
+    <div class="card-header bg-primary text-white text-center">
+      <h3>Chat System Login</h3>
+    </div>
+    <div class="card-body p-4">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="username" 
+            formControlName="username"
+            [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+        </div>
+        
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input 
+            type="password" 
+            class="form-control" 
+            id="password" 
+            formControlName="password"
+            [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+        </div>
+        
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          {{ errorMessage }}
+        </div>
+        
+        <button 
+          type="submit" 
+          class="btn btn-primary w-100" 
+          [disabled]="loginForm.invalid || loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ loading ? 'Signing in...' : 'Sign In' }}
+        </button>
+      </form>
+      
+      <div class="mt-4">
+        <small class="text-muted">
+          <strong>Default Admin:</strong><br>
+          Username: super<br>
+          Password: 123
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
