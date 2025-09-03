@@ -115,6 +115,28 @@
   border: 1px solid #eee;
   margin: 15px;
   border-radius: 4px;
+  max-height: 400px;
+  min-height: 300px;
+  scrollbar-width: thin;
+  scrollbar-color: #007bff #f8f9fa;
+}
+
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: #007bff;
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
 }
 
 .message {

@@ -134,7 +134,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   initializeSocket(): void {
     this.messagesSubscription = this.socketService.messages$.subscribe(messages => {
-      this.messages = messages;
+      this.messages = this.limitMessages(messages);
+      setTimeout(() => this.scrollToBottom(), 100);
     });
 
     this.connectedSubscription = this.socketService.connected$.subscribe(connected => {
@@ -274,6 +275,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.messageText.trim() && this.selectedChannel) {
       this.socketService.sendMessage(this.selectedChannel.id, this.messageText);
       this.messageText = '';
+      setTimeout(() => this.scrollToBottom(), 100);
     }
   }
 
@@ -299,5 +301,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  limitMessages(messages: any[]): any[] {
+    if (messages.length > 100) {
+      return messages.slice(-100);
+    }
+    return messages;
+  }
+
+  scrollToBottom(): void {
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   }
 }
