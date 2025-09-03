@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
+    private sessionService: SessionService,
     private router: Router
   ) {
     // Redirect if already logged in
@@ -44,6 +46,7 @@ export class LoginComponent {
           console.log('Login response:', success);
           this.isLoading = false;
           if (success) {
+            this.sessionService.startSession();
             this.redirectBasedOnRole();
           } else {
             this.loginError = 'Login failed. Please try again.';

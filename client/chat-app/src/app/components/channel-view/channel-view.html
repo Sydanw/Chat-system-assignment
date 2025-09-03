@@ -1,1 +1,46 @@
-<p>channel-view works!</p>
+<div class="channel-view">
+  <div class="channel-header" *ngIf="selectedChannel">
+    <div class="channel-info">
+      <h4># {{ selectedChannel.name }}</h4>
+      <span class="member-count" *ngIf="onlineMembers > 0">
+        {{ onlineMembers }} members online
+      </span>
+    </div>
+  </div>
+  
+  <div class="messages-container">
+    <div class="messages-area" #messagesArea>
+      <div class="message-item" *ngFor="let message of messages">
+        <div class="message-header">
+          <strong class="username">{{ message.username }}:</strong>
+          <span class="timestamp" *ngIf="message.timestamp">
+            {{ formatTimestamp(message.timestamp) }}
+          </span>
+        </div>
+        <div class="message-content">{{ message.content }}</div>
+      </div>
+      
+      <div class="read-indicator" *ngIf="messages.length > 0">
+        <em>--- You have read all messages ---</em>
+      </div>
+    </div>
+  </div>
+  
+  <div class="message-input-container">
+    <div class="message-input">
+      <input 
+        type="text" 
+        class="form-control"
+        [(ngModel)]="messageText" 
+        placeholder="Type your message..."
+        (keyup.enter)="sendMessage()"
+        #messageInput>
+      <button 
+        class="btn btn-primary" 
+        (click)="sendMessage()"
+        [disabled]="!messageText.trim()">
+        Send
+      </button>
+    </div>
+  </div>
+</div>

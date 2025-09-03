@@ -20,11 +20,68 @@ class DataManager {
                         email: 'super@admin.com',
                         password: '123',
                         roles: ['Super Admin'],
-                        groups: []
+                        groups: [1, 2, 3]
+                    },
+                    {
+                        id: 2,
+                        username: 'group_admin',
+                        email: 'group_admin@test.com',
+                        password: '123',
+                        roles: ['Group Admin'],
+                        groups: [2, 4]
+                    },
+                    {
+                        id: 3,
+                        username: 'john_doe',
+                        email: 'john@test.com',
+                        password: '123',
+                        roles: ['User'],
+                        groups: [1, 4, 5]
                     }
                 ],
-                groups: [],
-                channels: []
+                groups: [
+                    {
+                        id: 1,
+                        name: 'General Discussion',
+                        description: 'Main discussion group for all users',
+                        createdBy: 1,
+                        members: [1, 2, 3],
+                        admins: [1],
+                        channels: [1, 2, 3]
+                    },
+                    {
+                        id: 2,
+                        name: 'Development Team',
+                        description: 'Development team discussions',
+                        createdBy: 2,
+                        members: [1, 2],
+                        admins: [2],
+                        channels: [4, 5, 6]
+                    }
+                ],
+                channels: [
+                    {
+                        id: 1,
+                        name: 'general',
+                        description: 'General discussion channel',
+                        groupId: 1,
+                        members: [1, 2, 3]
+                    },
+                    {
+                        id: 2,
+                        name: 'announcements',
+                        description: 'Important announcements',
+                        groupId: 1,
+                        members: [1, 2, 3]
+                    },
+                    {
+                        id: 4,
+                        name: 'dev-general',
+                        description: 'Development general discussion',
+                        groupId: 2,
+                        members: [1, 2]
+                    }
+                ]
             };
             this.saveData(defaultData);
             return defaultData;
