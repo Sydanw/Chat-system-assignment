@@ -61,9 +61,8 @@ export class LoginComponent {
     const user = this.authService.getCurrentUser();
     console.log('Current user:', user);
     if (user) {
-      // For now, just navigate to a simple success page
-      alert(`Welcome ${user.username}! Role: ${user.roles.join(', ')}`);
-      // Later you can navigate to different dashboards based on role
+      console.log('Redirecting to dashboard...');
+      this.router.navigate(['/dashboard']);
     }
   }
 

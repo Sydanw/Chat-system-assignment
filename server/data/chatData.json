@@ -8,9 +8,127 @@
       "roles": [
         "Super Admin"
       ],
-      "groups": []
+      "groups": [1, 2, 3]
+    },
+    {
+      "id": 2,
+      "username": "group_admin",
+      "email": "group@admin.com",
+      "password": "123",
+      "roles": [
+        "Group Admin"
+      ],
+      "groups": [1, 2]
+    },
+    {
+      "id": 3,
+      "username": "john_doe",
+      "email": "john@user.com",
+      "password": "123",
+      "roles": [
+        "User"
+      ],
+      "groups": [1, 3]
+    },
+    {
+      "id": 4,
+      "username": "alice",
+      "email": "alice@user.com",
+      "password": "123",
+      "roles": [
+        "User"
+      ],
+      "groups": [1]
+    },
+    {
+      "id": 5,
+      "username": "bob",
+      "email": "bob@user.com",
+      "password": "123",
+      "roles": [
+        "User"
+      ],
+      "groups": [1, 2]
     }
   ],
-  "groups": [],
-  "channels": []
+  "groups": [
+    {
+      "id": 1,
+      "name": "General Discussion",
+      "description": "Main discussion group for all users",
+      "createdBy": 1,
+      "members": [1, 2, 3, 4, 5],
+      "admins": [1, 2],
+      "channels": [1, 2, 3]
+    },
+    {
+      "id": 2,
+      "name": "Development Team",
+      "description": "Development team discussions",
+      "createdBy": 2,
+      "members": [1, 2, 5],
+      "admins": [2],
+      "channels": [4, 5, 6]
+    },
+    {
+      "id": 3,
+      "name": "Marketing",
+      "description": "Marketing team discussions",
+      "createdBy": 1,
+      "members": [1, 3],
+      "admins": [1],
+      "channels": [7]
+    }
+  ],
+  "channels": [
+    {
+      "id": 1,
+      "name": "general",
+      "groupId": 1,
+      "description": "General chat for everyone",
+      "members": [1, 2, 3, 4, 5]
+    },
+    {
+      "id": 2,
+      "name": "announcements",
+      "groupId": 1,
+      "description": "Important announcements",
+      "members": [1, 2, 3, 4, 5]
+    },
+    {
+      "id": 3,
+      "name": "random",
+      "groupId": 1,
+      "description": "Random discussions",
+      "members": [1, 2, 3, 4, 5]
+    },
+    {
+      "id": 4,
+      "name": "dev-general",
+      "groupId": 2,
+      "description": "Development general chat",
+      "members": [1, 2, 5]
+    },
+    {
+      "id": 5,
+      "name": "code-review",
+      "groupId": 2,
+      "description": "Code review discussions",
+      "members": [1, 2, 5]
+    },
+    {
+      "id": 6,
+      "name": "testing",
+      "groupId": 2,
+      "description": "Testing discussions",
+      "members": [1, 2, 5]
+    },
+    {
+      "id": 7,
+      "name": "campaigns",
+      "groupId": 3,
+      "description": "Marketing campaigns",
+      "members": [1, 3]
+    }
+  ]
 }
