@@ -257,6 +257,54 @@
       "username": "super",
       "content": "Hello, testing Socket.io real-time chat!",
       "timestamp": "2025-09-03T20:31:25.679Z"
+    },
+    {
+      "id": 1756933004035,
+      "channelId": 1,
+      "userId": 1,
+      "username": "super",
+      "content": "Hi john",
+      "timestamp": "2025-09-03T20:56:44.035Z"
+    },
+    {
+      "id": 1756933017382,
+      "channelId": 2,
+      "userId": 3,
+      "username": "john_doe",
+      "content": "hi all",
+      "timestamp": "2025-09-03T20:56:57.382Z"
+    },
+    {
+      "id": 1756934177776,
+      "channelId": 1,
+      "userId": 2,
+      "username": "group_admin",
+      "content": "Hi all from GroupAdmin",
+      "timestamp": "2025-09-03T21:16:17.776Z"
+    },
+    {
+      "id": 1756934356911,
+      "channelId": 2,
+      "userId": 1,
+      "username": "super",
+      "content": "HIII !",
+      "timestamp": "2025-09-03T21:19:16.911Z"
+    },
+    {
+      "id": 1756934488122,
+      "channelId": 2,
+      "userId": 3,
+      "username": "john_doe",
+      "content": "Make me admin",
+      "timestamp": "2025-09-03T21:21:28.122Z"
+    },
+    {
+      "id": 1756934515003,
+      "channelId": 2,
+      "userId": 1,
+      "username": "super",
+      "content": "working onit",
+      "timestamp": "2025-09-03T21:21:55.003Z"
     }
   ]
 }

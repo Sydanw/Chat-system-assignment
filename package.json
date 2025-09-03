@@ -1,0 +1,19 @@
+{
+  "name": "chat-system-assignment",
+  "version": "1.0.0",
+  "description": "- **main**: Primary development branch\r - **feature/auth**: Authentication implementation\r - **feature/admin**: Admin panel features\r - **documentation**: Documentation updates",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sydanw/Chat-system-assignment.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sydanw/Chat-system-assignment/issues"
+  },
+  "homepage": "https://github.com/Sydanw/Chat-system-assignment#readme"
+}
