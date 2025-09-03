@@ -64,6 +64,16 @@
         1,
         2
       ]
+    },
+    {
+      "id": 6,
+      "username": "testuser",
+      "email": "testuser@example.com",
+      "password": "password123",
+      "roles": [
+        "User"
+      ],
+      "groups": []
     }
   ],
   "groups": [
