@@ -23,9 +23,20 @@
 
 .login-header h2 {
   color: #333;
-  margin: 0;
+  margin: 0 0 10px 0;
   font-weight: 600;
   font-size: 28px;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.login-form {
+  margin-bottom: 30px;
 }
 
 .form-group {
@@ -118,12 +129,52 @@
   margin: 0 0 15px 0;
   color: #495057;
   font-size: 16px;
+  font-weight: 600;
 }
 
-.default-accounts p {
-  margin: 8px 0;
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.account-item {
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 14px;
-  color: #6c757d;
+}
+
+.account-item strong {
+  font-weight: 600;
+}
+
+.account-item span {
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.account-item.super-admin {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.account-item.group-admin {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.account-item.user {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
 }
 
 .debug-section {
@@ -158,5 +209,9 @@
   
   .login-header h2 {
     font-size: 24px;
+  }
+  
+  .subtitle {
+    font-size: 14px;
   }
 }
