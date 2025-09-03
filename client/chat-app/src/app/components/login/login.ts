@@ -1,51 +1,87 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
 export class LoginComponent {
-  loginForm: FormGroup;
-  errorMessage = '';
-  loading = false;
+  username: string = '';
+  password: string = '';
+  loginError: string = '';
+  isLoading: boolean = false;
 
   constructor(
-    private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
   ) {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]]
-    });
+    // Redirect if already logged in
+    if (this.authService.isAuthenticated()) {
+      this.redirectBasedOnRole();
+    }
   }
 
-  onSubmit(): void {
-    if (this.loginForm.valid) {
-      this.loading = true;
-      this.errorMessage = '';
+  login(): void {
+    if (!this.username || !this.password) {
+      this.loginError = 'Username and password are required';
+      return;
+    }
 
-      this.authService.login(this.loginForm.value).subscribe({
+    this.isLoading = true;
+    this.loginError = '';
+
+    console.log('Attempting login with:', { username: this.username, password: this.password });
+
+    this.authService.login({ username: this.username, password: this.password })
+      .subscribe({
         next: (success) => {
+          console.log('Login response:', success);
+          this.isLoading = false;
           if (success) {
-            this.router.navigate(['/dashboard']);
+            this.redirectBasedOnRole();
           } else {
-            this.errorMessage = 'Invalid username or password';
+            this.loginError = 'Login failed. Please try again.';
           }
-          this.loading = false;
         },
         error: (error) => {
-          this.errorMessage = 'Login failed. Please try again.';
-          this.loading = false;
+          this.isLoading = false;
+          console.error('Login error:', error);
+          this.loginError = error.error?.message || 'Login failed. Please check your connection.';
         }
       });
+  }
+
+  private redirectBasedOnRole(): void {
+    const user = this.authService.getCurrentUser();
+    console.log('Current user:', user);
+    if (user) {
+      // For now, just navigate to a simple success page
+      alert(`Welcome ${user.username}! Role: ${user.roles.join(', ')}`);
+      // Later you can navigate to different dashboards based on role
     }
+  }
+
+  // Test connection to backend
+  testConnection(): void {
+    console.log('Testing connection to backend...');
+    fetch('http://localhost:3000/api/users')
+      .then(response => {
+        console.log('Backend response status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Backend data:', data);
+        alert('Backend connection successful! Check console for details.');
+      })
+      .catch(error => {
+        console.error('Connection test failed:', error);
+        alert('Backend connection failed! Check console for details.');
+      });
   }
 }
