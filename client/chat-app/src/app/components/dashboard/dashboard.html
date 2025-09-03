@@ -1,31 +1,122 @@
-<div class="container mt-4">
-  <h1>Dashboard</h1>
-  <div class="alert alert-success" *ngIf="currentUser">
-    Welcome, {{ currentUser.username }}! 
-    <span class="badge bg-primary ms-2">{{ getRoleText() }}</span>
-  </div>
-  
-  <div class="row">
-    <div class="col-md-8">
-      <h3>Chat Dashboard</h3>
-      <p>This is the role-based chat dashboard. Your role: {{ getRoleText() }}</p>
+<div class="chat-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <strong>Chat System</strong>
+      <span class="role-badge" [ngClass]="{
+        'super-admin': isSuperAdmin(),
+        'group-admin': isGroupAdmin(),
+        'user': !isSuperAdmin() && !isGroupAdmin()
+      }">{{ getRoleText() }}</span>
     </div>
-    
-    <div class="col-md-4" *ngIf="isSuperAdmin()">
-      <h4>Super Admin Panel</h4>
-      <div class="card">
-        <div class="card-body">
-          <h5>User Management</h5>
-          <div *ngFor="let user of users" class="mb-2">
-            <span>{{ user.username }}</span>
-            <span class="badge bg-secondary ms-2">{{ user.roles.join(', ') }}</span>
-          </div>
+    <div class="header-right">
+      Welcome, {{ currentUser?.username }} | 
+      <button class="btn btn-sm btn-outline-light" (click)="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="section-title">My Groups</div>
+      <div class="list-item" *ngFor="let group of groups" (click)="selectGroup(group)">
+        {{ group.name }}
+        <span *ngIf="group.isOwner" class="text-muted">(Owner)</span>
+      </div>
+      
+      <div class="section-title">Channels</div>
+      <div class="list-item" *ngFor="let channel of channels" (click)="selectChannel(channel)">
+        # {{ channel.name }}
+      </div>
+      
+      <!-- Role-specific sidebar buttons -->
+      <div class="sidebar-actions" *ngIf="isGroupAdmin()">
+        <button class="btn btn-success btn-sm w-100 mt-2">Create New Group</button>
+      </div>
+      
+      <div class="sidebar-actions" *ngIf="!isSuperAdmin() && !isGroupAdmin()">
+        <button class="btn btn-primary btn-sm mt-2">Request Group Access</button>
+        <button class="btn btn-danger btn-sm mt-1">Leave Group</button>
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+      <div class="chat-header">
+        <strong>Channel: {{ selectedChannel?.name || '#general' }}</strong>
+        <div class="channel-info" *ngIf="!isSuperAdmin() && !isGroupAdmin()">
+          <small class="text-muted">{{ onlineMembers }} members online</small>
+        </div>
+      </div>
+      
+      <div class="messages-container">
+        <div class="message" *ngFor="let message of messages">
+          <strong>{{ message.username }}:</strong> {{ message.content }}
+        </div>
+        <div class="message-divider" *ngIf="!isSuperAdmin() && !isGroupAdmin()">
+          <em class="text-muted">--- You have read all messages ---</em>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" *ngIf="isSuperAdmin()">
+      <div class="section-title">Super Admin Tools</div>
+      
+      <div class="admin-section">
+        <strong>User Management</strong>
+        <button class="btn btn-success btn-sm">Promote to Group Admin</button>
+        <button class="btn btn-success btn-sm">Promote to Super Admin</button>
+        <button class="btn btn-danger btn-sm">Remove User</button>
+      </div>
+      
+      <div class="admin-section">
+        <strong>System Overview</strong>
+        <div class="system-stats">
+          <div>Total Users: {{ totalUsers }}</div>
+          <div>Total Groups: {{ totalGroups }}</div>
+          <div>Active Channels: {{ totalChannels }}</div>
+        </div>
+      </div>
+      
+      <div class="admin-section">
+        <strong>Reports & Logs</strong>
+        <button class="btn btn-primary btn-sm">View Reports</button>
+        <button class="btn btn-primary btn-sm">System Logs</button>
+      </div>
+    </div>
+
+    <div class="admin-panel" *ngIf="isGroupAdmin()">
+      <div class="section-title">Group Admin Tools</div>
+      
+      <div class="admin-section">
+        <strong>Group: {{ selectedGroup?.name || 'Development Team' }}</strong>
+        <button class="btn btn-primary btn-sm">Add Channel</button>
+        <button class="btn btn-primary btn-sm">Manage Members</button>
+        <button class="btn btn-danger btn-sm">Delete Channel</button>
+      </div>
+      
+      <div class="admin-section">
+        <strong>Member Management</strong>
+        <button class="btn btn-success btn-sm">Add User to Group</button>
+        <button class="btn btn-danger btn-sm">Remove User</button>
+        <button class="btn btn-warning btn-sm">Ban from Channel</button>
+      </div>
+      
+      <div class="admin-section">
+        <strong>Requests</strong>
+        <div class="join-request" *ngFor="let request of joinRequests">
+          {{ request.username }} wants to join
+          <button class="btn btn-success btn-xs ms-2">Approve</button>
         </div>
       </div>
     </div>
   </div>
-  
-  <div class="mt-3">
-    <button class="btn btn-danger" (click)="logout()">Logout</button>
+
+  <!-- Message Input -->
+  <div class="message-input">
+    <input type="text" [(ngModel)]="messageText" placeholder="Type your message..." class="form-control">
+    <button class="btn btn-primary" (click)="sendMessage()">Send</button>
   </div>
 </div>
