@@ -3,14 +3,26 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
+const http = require('http');
+const socketIo = require('socket.io');
 
 // Import route modules
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const groupRoutes = require('./routes/groups');
 const channelRoutes = require('./routes/channels');
+const { initializeSocket } = require('./sockets');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "http://localhost:4200",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
 const PORT = 3000;
 
 app.use(session({
@@ -38,9 +50,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/channels', channelRoutes);
 
+initializeSocket(io);
+
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log('Socket.io initialized for real-time chat');
 });
 
 module.exports = app;

@@ -15,6 +15,17 @@ router.get('/group/:groupId', (req, res) => {
     res.json(channels);
 });
 
+router.get('/:channelId/messages', (req, res) => {
+  try {
+    const channelId = parseInt(req.params.channelId);
+    const messages = (dataManager.data.messages || []).filter(msg => msg.channelId === channelId);
+    res.json(messages);
+  } catch (error) {
+    console.error('Error reading messages:', error);
+    res.status(500).json({ error: 'Failed to read messages' });
+  }
+});
+
 // Get channel by ID
 router.get('/:id', (req, res) => {
     const channel = dataManager.data.channels.find(c => c.id === parseInt(req.params.id));

@@ -52,10 +52,14 @@
       
       <div class="messages-container">
         <div class="message" *ngFor="let message of messages">
-          <strong>{{ message.username }}:</strong> {{ message.content }}
+          <div class="message-header">
+            <strong>{{ message.username }}</strong>
+            <small class="text-muted ms-2">{{ formatTimestamp(message.timestamp) }}</small>
+          </div>
+          <div class="message-content">{{ message.content }}</div>
         </div>
-        <div class="message-divider" *ngIf="!isSuperAdmin() && !isGroupAdmin()">
-          <em class="text-muted">--- You have read all messages ---</em>
+        <div class="message-divider" *ngIf="messages.length === 0">
+          <em class="text-muted">--- No messages yet. Start the conversation! ---</em>
         </div>
       </div>
     </div>
