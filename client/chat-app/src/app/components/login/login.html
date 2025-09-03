@@ -1,8 +1,71 @@
-<div>
-  <h2>Login Test</h2>
-  <input [(ngModel)]="username" placeholder="username">
-  <input [(ngModel)]="password" placeholder="password" type="password">
-  <button (click)="login()">Login</button>
-  <button (click)="testConnection()">Test Backend</button>
-  <div *ngIf="loginError">Error: {{loginError}}</div>
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h2>Welcome Back</h2>
+      <p class="subtitle">Sign in to your Chat System account</p>
+    </div>
+    
+    <form class="login-form" (ngSubmit)="login()">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          id="username"
+          type="text" 
+          class="form-control" 
+          [(ngModel)]="username" 
+          name="username"
+          placeholder="Enter your username"
+          required
+          autocomplete="username">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          id="password"
+          type="password" 
+          class="form-control" 
+          [(ngModel)]="password" 
+          name="password"
+          placeholder="Enter your password"
+          required
+          autocomplete="current-password">
+      </div>
+      
+      <div class="error-message" *ngIf="loginError">
+        {{ loginError }}
+      </div>
+      
+      <button 
+        type="submit" 
+        class="btn btn-primary" 
+        [disabled]="isLoading || !username || !password">
+        <span *ngIf="!isLoading">Sign In</span>
+        <span *ngIf="isLoading">Signing In...</span>
+      </button>
+    </form>
+    
+    <div class="default-accounts">
+      <h4>Demo Accounts</h4>
+      <div class="account-grid">
+        <div class="account-item super-admin">
+          <strong>Super Admin</strong>
+          <span>super / 123</span>
+        </div>
+        <div class="account-item group-admin">
+          <strong>Group Admin</strong>
+          <span>group_admin / 123</span>
+        </div>
+        <div class="account-item user">
+          <strong>Regular User</strong>
+          <span>john_doe / 123</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="debug-section">
+      <button class="btn btn-secondary" (click)="testConnection()">Test Backend Connection</button>
+      <small>Click to verify backend connectivity</small>
+    </div>
+  </div>
 </div>

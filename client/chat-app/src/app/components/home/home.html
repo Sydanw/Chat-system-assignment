@@ -1,0 +1,53 @@
+<div class="home-container">
+  <div class="home-card">
+    <div class="home-header">
+      <h1>Welcome to Chat System</h1>
+      <p class="subtitle">Connect, collaborate, and communicate with your team</p>
+    </div>
+    
+    <div class="features-section">
+      <div class="feature-item">
+        <div class="feature-icon">💬</div>
+        <h3>Real-time Messaging</h3>
+        <p>Instant communication with your team members across different channels</p>
+      </div>
+      
+      <div class="feature-item">
+        <div class="feature-icon">👥</div>
+        <h3>Group Management</h3>
+        <p>Create and manage groups with role-based access controls</p>
+      </div>
+      
+      <div class="feature-item">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure Access</h3>
+        <p>Role-based authentication with Super Admin, Group Admin, and User levels</p>
+      </div>
+    </div>
+    
+    <div class="cta-section">
+      <button class="btn btn-primary" (click)="navigateToLogin()">
+        Get Started
+      </button>
+      <p class="login-hint">Already have an account? <a (click)="navigateToLogin()" class="login-link">Sign in here</a></p>
+    </div>
+    
+    <div class="demo-accounts">
+      <h4>Demo Accounts</h4>
+      <div class="account-grid">
+        <div class="account-item super-admin">
+          <strong>Super Admin</strong>
+          <span>super / 123</span>
+        </div>
+        <div class="account-item group-admin">
+          <strong>Group Admin</strong>
+          <span>group_admin / 123</span>
+        </div>
+        <div class="account-item user">
+          <strong>Regular User</strong>
+          <span>john_doe / 123</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
