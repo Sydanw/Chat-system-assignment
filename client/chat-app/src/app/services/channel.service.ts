@@ -41,4 +41,8 @@ export class ChannelService {
   removeUserFromChannel(channelId: number, userId: number): Observable<any> {
     return this.http.delete(`${environment.apiUrl}/channels/${channelId}/members/${userId}`);
   }
+
+  getMessagesForChannel(channelId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/channels/${channelId}/messages`);
+  }
 }

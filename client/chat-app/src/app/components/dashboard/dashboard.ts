@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
@@ -6,10 +6,12 @@ import { UserService } from '../../services/user.service';
 import { GroupService } from '../../services/group.service';
 import { ChannelService } from '../../services/channel.service';
 import { SessionService } from '../../services/session.service';
+import { SocketService } from '../../services/socket.service';
 import { Router } from '@angular/router';
 import { AdminPanel } from '../admin-panel/admin-panel';
 import { GroupManagement } from '../group-management/group-management';
 import { ChannelView } from '../channel-view/channel-view';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -18,7 +20,7 @@ import { ChannelView } from '../channel-view/channel-view';
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   currentUser: any = null;
   users: any[] = [];
   groups: any[] = [];
@@ -34,6 +36,9 @@ export class DashboardComponent implements OnInit {
   totalGroups: number = 0;
   totalChannels: number = 0;
   onlineMembers: number = 15;
+  
+  private messagesSubscription: Subscription = new Subscription();
+  private connectedSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -41,6 +46,7 @@ export class DashboardComponent implements OnInit {
     private groupService: GroupService,
     private channelService: ChannelService,
     private sessionService: SessionService,
+    private socketService: SocketService,
     private router: Router
   ) {}
 
@@ -48,6 +54,16 @@ export class DashboardComponent implements OnInit {
     this.currentUser = this.getCurrentUser();
     this.sessionService.startSession();
     this.loadInitialData();
+    this.initializeSocket();
+  }
+
+  ngOnDestroy(): void {
+    this.messagesSubscription.unsubscribe();
+    this.connectedSubscription.unsubscribe();
+    if (this.selectedChannel) {
+      this.socketService.leaveChannel(this.selectedChannel.id);
+    }
+    this.socketService.disconnect();
   }
 
   loadInitialData(): void {
@@ -109,7 +125,23 @@ export class DashboardComponent implements OnInit {
   }
 
   loadMessages(): void {
-    this.messages = this.getDefaultMessages();
+    if (this.selectedChannel) {
+      this.loadMessagesForChannel(this.selectedChannel.id);
+    } else {
+      this.messages = this.getDefaultMessages();
+    }
+  }
+
+  initializeSocket(): void {
+    this.messagesSubscription = this.socketService.messages$.subscribe(messages => {
+      this.messages = messages;
+    });
+
+    this.connectedSubscription = this.socketService.connected$.subscribe(connected => {
+      if (connected && this.selectedChannel) {
+        this.socketService.joinChannel(this.selectedChannel.id);
+      }
+    });
   }
 
   loadJoinRequests(): void {
@@ -204,8 +236,14 @@ export class DashboardComponent implements OnInit {
   }
 
   selectChannel(channel: any): void {
+    if (this.selectedChannel) {
+      this.socketService.leaveChannel(this.selectedChannel.id);
+    }
+    
     this.selectedChannel = channel;
+    this.socketService.clearMessages();
     this.loadMessagesForChannel(channel.id);
+    this.socketService.joinChannel(channel.id);
   }
 
   loadChannelsForGroup(groupId: number): void {
@@ -221,16 +259,20 @@ export class DashboardComponent implements OnInit {
   }
 
   loadMessagesForChannel(channelId: number): void {
-    this.messages = this.getDefaultMessages();
+    this.channelService.getMessagesForChannel(channelId).subscribe({
+      next: (messages: any[]) => {
+        this.socketService.setMessages(messages);
+      },
+      error: (error: any) => {
+        console.error('Error loading messages for channel:', error);
+        this.socketService.setMessages(this.getDefaultMessages());
+      }
+    });
   }
 
   sendMessage(): void {
-    if (this.messageText.trim()) {
-      this.messages.push({
-        username: this.currentUser?.username || 'You',
-        content: this.messageText,
-        timestamp: new Date()
-      });
+    if (this.messageText.trim() && this.selectedChannel) {
+      this.socketService.sendMessage(this.selectedChannel.id, this.messageText);
       this.messageText = '';
     }
   }
@@ -251,5 +293,11 @@ export class DashboardComponent implements OnInit {
     if (this.isSuperAdmin()) return 'Super Admin';
     if (this.isGroupAdmin()) return 'Group Admin';
     return 'User';
+  }
+
+  formatTimestamp(timestamp: string): string {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 }
