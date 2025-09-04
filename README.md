@@ -4,6 +4,8 @@
 
 ### Branch Strategy
 - **main**: Primary development branch
+- **Client/chat-app** - Frontend
+- **server** - Backend
 - **feature/auth**: Authentication implementation
 - **feature/admin**: Admin panel features
 - **documentation**: Documentation updates
@@ -12,19 +14,41 @@
 Commits made after each major feature implementation with descriptive messages following the pattern: "type: description"
 
 ### Repository Structure
-chat-system-assignment/
-├── client/                 # Angular frontend
-│   ├── src/app/
-│   │   ├── components/     # UI Components
-│   │   ├── services/       # Business logic services
-│   │   ├── models/         # TypeScript interfaces
-│   │   └── guards/         # Route guards
-├── server/                 # Node.js backend
-│   ├── routes/             # Express route handlers
-│   ├── data/               # JSON data management
-│   └── server.js           # Main server file
-├── docs/                   # Additional documentation
-└── README.md              # This file
+Chat-system-assignment/
+├── client/
+│   └── chat-app/
+│       └── src/
+│           └── app/
+│               ├── components/
+│               │   ├── dashboard/
+│               │   ├── admin-panel/
+│               │   ├── home/
+│               │   ├── login/
+│               │   ├── group-management/
+│               │   └── channel-view/
+│               ├── services/
+│               │   ├── auth.service.ts
+│               │   ├── user.service.ts
+│               │   ├── socket.service.ts
+│               │   └── session.service.ts
+│               ├── guards/
+│               │   └── auth-guard.ts
+│               └── models/
+│                   ├── user.model.ts
+│                   ├── group.model.ts
+│                   └── channel.model.ts
+└── server/
+    ├── server.js
+    ├── sockets.js
+    ├── data/
+    │   ├── chatData.json
+    │   └── dataManager.js
+    └── routes/
+        ├── auth.js
+        ├── users.js
+        ├── groups.js
+        └── channels.js
+
 
 ## Data Structures
 
@@ -89,8 +113,6 @@ Routes
 /admin: Admin panel (requires Super Admin role)
 /groups: Group management (requires Group Admin+ role)
 
-Node Server Architecture
-Modules
 
 server.js: Main application entry point
 dataManager.js: JSON file data persistence
