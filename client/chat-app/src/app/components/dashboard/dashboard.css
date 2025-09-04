@@ -238,6 +238,57 @@
   font-size: 11px;
 }
 
+.user-creation-form {
+  background: white;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  margin: 10px 0;
+}
+
+.user-creation-form .form-group {
+  margin-bottom: 10px;
+}
+
+.user-creation-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.user-creation-form .form-control {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.user-list {
+  margin-top: 15px;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 5px 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 5px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .main-content {

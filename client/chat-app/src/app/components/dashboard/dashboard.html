@@ -70,9 +70,38 @@
       
       <div class="admin-section">
         <strong>User Management</strong>
-        <button class="btn btn-success btn-sm">Promote to Group Admin</button>
-        <button class="btn btn-success btn-sm">Promote to Super Admin</button>
-        <button class="btn btn-danger btn-sm">Remove User</button>
+        <div class="user-creation-form" *ngIf="showCreateUserForm">
+          <div class="form-group">
+            <label for="newUsername">Username</label>
+            <input type="text" [(ngModel)]="newUser.username" placeholder="Enter username" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="newEmail">Email</label>
+            <input type="email" [(ngModel)]="newUser.email" placeholder="Enter email" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="newPassword">Password</label>
+            <input type="password" [(ngModel)]="newUser.password" placeholder="Enter password" class="form-control">
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-success btn-sm" (click)="createUser()">Create User</button>
+            <button class="btn btn-secondary btn-sm" (click)="cancelCreateUser()">Cancel</button>
+          </div>
+        </div>
+        <button class="btn btn-success btn-sm" (click)="showCreateUserForm = !showCreateUserForm" *ngIf="!showCreateUserForm">Create New User</button>
+        <div class="user-list" *ngIf="users.length > 0">
+          <div class="user-item" *ngFor="let user of users">
+            <div class="user-info">
+              <strong>{{ user.username }}</strong>
+              <span class="role-badge">{{ user.roles?.join(', ') || 'User' }}</span>
+            </div>
+            <div class="user-actions">
+              <button class="btn btn-danger btn-sm" (click)="removeUser(user)" *ngIf="user.username !== currentUser?.username">
+                Remove User
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div class="admin-section">

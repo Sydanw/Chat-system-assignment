@@ -37,6 +37,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   totalChannels: number = 0;
   onlineMembers: number = 15;
   
+  showCreateUserForm: boolean = false;
+  newUser: any = {
+    username: '',
+    email: '',
+    password: ''
+  };
+  
   private messagesSubscription: Subscription = new Subscription();
   private connectedSubscription: Subscription = new Subscription();
 
@@ -314,6 +321,48 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const messagesContainer = document.querySelector('.messages-container');
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
+
+  createUser(): void {
+    if (!this.newUser.username || !this.newUser.email || !this.newUser.password) {
+      alert('Please fill in all fields');
+      return;
+    }
+    
+    this.userService.createUser(this.newUser).subscribe({
+      next: (response: any) => {
+        console.log('User created successfully:', response);
+        this.loadUsers();
+        this.cancelCreateUser();
+        alert('User created successfully!');
+      },
+      error: (error: any) => {
+        console.error('Error creating user:', error);
+        alert(error.error?.message || 'Failed to create user');
+      }
+    });
+  }
+  
+  cancelCreateUser(): void {
+    this.showCreateUserForm = false;
+    this.newUser = { username: '', email: '', password: '' };
+  }
+
+  removeUser(user: any): void {
+    if (confirm(`Are you sure you want to remove user ${user.username}?`)) {
+      this.userService.deleteUser(user.id).subscribe({
+        next: () => {
+          console.log('User removed successfully');
+          this.users = this.users.filter(u => u.id !== user.id);
+          this.loadSystemStats();
+          alert('User removed successfully!');
+        },
+        error: (error: any) => {
+          console.error('Error removing user:', error);
+          alert('Failed to remove user');
+        }
+      });
     }
   }
 }
