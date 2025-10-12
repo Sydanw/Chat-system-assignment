@@ -1,5 +1,5 @@
 const express = require('express');
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -18,25 +18,11 @@ const dataManager = require('./data/dataManager');
 
 const app = express();
 
-let server;
-let options = {};
-
-if (fs.existsSync('key.pem') && fs.existsSync('cert.pem')) {
-    options = {
-        key: fs.readFileSync('key.pem'),
-        cert: fs.readFileSync('cert.pem')
-    };
-    server = https.createServer(options, app);
-} else {
-    const http = require('http');
-    server = http.createServer(app);
-    console.warn('Warning: Running without HTTPS. SSL certificates not found.');
-}
+const server = http.createServer(app);
 
 const peerServer = ExpressPeerServer(server, {
     path: '/',
-    debug: true,
-    ssl: options
+    debug: true
 });
 
 app.use('/peerjs', peerServer);
@@ -67,7 +53,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: { 
         maxAge: 30 * 60 * 1000,
-        secure: fs.existsSync('key.pem'),
+        secure: false,
         httpOnly: true
     }
 }));
@@ -156,10 +142,10 @@ async function startServer() {
     }
     
     server.listen(PORT, () => {
-        const protocol = fs.existsSync('key.pem') ? 'https' : 'http';
-        console.log(`Server running on ${protocol}://localhost:${PORT}`);
+        console.log(`Server running on http://localhost:${PORT}`);
         console.log('Socket.io initialized for real-time chat');
         console.log('PeerJS server running at /peerjs');
+        console.log('✓ Running in HTTP mode for reverse proxy compatibility');
     });
 }
 
