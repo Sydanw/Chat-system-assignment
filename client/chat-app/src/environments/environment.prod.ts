@@ -1,5 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:3000/', // Replace with your production API URL
-  // Add other environment variables you need
+  apiUrl: 'https://s5414889.elf.ict.griffith.edu.au:8443/proxy/3000/api',
 };
