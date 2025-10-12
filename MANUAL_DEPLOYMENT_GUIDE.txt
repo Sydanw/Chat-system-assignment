@@ -1,0 +1,273 @@
+═══════════════════════════════════════════════════════════════════════════════
+  COMPLETE MANUAL DEPLOYMENT GUIDE - ELF SERVER
+═══════════════════════════════════════════════════════════════════════════════
+
+This guide will help you deploy the Angular frontend to your ELF server manually
+without using git. Follow these steps carefully.
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 1: UNDERSTANDING THE FOLDER STRUCTURE
+═══════════════════════════════════════════════════════════════════════════════
+
+Your ELF server should have this structure:
+
+/var/www/html/VIDCHAT/
+├── server/                          ← Backend server files (Node.js)
+│   ├── server.js                    ← Main server file (MUST UPDATE THIS)
+│   ├── package.json
+│   ├── routes/
+│   ├── data/
+│   ├── sockets.js
+│   └── ... (other server files)
+│
+└── client/                          ← Frontend files (Angular)
+    └── dist/
+        └── chat-app/
+            └── browser/             ← Angular built files go HERE
+                ├── index.html
+                ├── main-YJRZTBOZ.js
+                ├── styles-VRDYZCWE.css
+                ├── polyfills-5CFQRCPP.js
+                └── favicon.ico
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 2: FILES TO UPDATE/UPLOAD
+═══════════════════════════════════════════════════════════════════════════════
+
+YOU NEED TO UPDATE/UPLOAD THESE FILES:
+
+1. server/server.js                           ← REPLACE THIS FILE
+2. client/dist/chat-app/browser/index.html    ← UPLOAD THESE FILES
+3. client/dist/chat-app/browser/*.js          ← (Already uploaded per screenshot)
+4. client/dist/chat-app/browser/*.css
+5. client/dist/chat-app/browser/favicon.ico
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 3: STEP-BY-STEP DEPLOYMENT INSTRUCTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Connect to ELF Server via SSH
+--------------------------------------
+Open your SSH terminal (like PuTTY or Windows Terminal):
+
+ssh s5414889@elf.ict.griffith.edu.au
+
+Enter your password when prompted.
+
+
+STEP 2: Stop the Current Server
+--------------------------------
+cd /var/www/html/VIDCHAT/server
+pkill -f "node server.js"
+
+Wait 2-3 seconds to ensure the server has stopped.
+
+
+STEP 3: Backup Your Current server.js
+--------------------------------------
+cp server.js server.js.backup
+
+This creates a backup in case you need to revert.
+
+
+STEP 4: Update server.js File
+------------------------------
+You have TWO OPTIONS:
+
+OPTION A: Use the new server.js from the deployment zip
+   1. Extract server.js from the NEW deployment zip (vidchat-complete-deployment.zip)
+   2. Upload it to /var/www/html/VIDCHAT/server/
+   3. REPLACE the existing server.js
+
+OPTION B: Manually edit the existing server.js
+   1. Open server.js in VS Code on the ELF server
+   2. Find this line (around line 126):
+      const clientDistPath = path.join(__dirname, '../client/dist/chat-app');
+   3. Change it to:
+      const clientDistPath = path.join(__dirname, '../client/dist/chat-app/browser');
+   4. Save the file
+
+
+STEP 5: Verify Angular Files Are in Correct Location
+-----------------------------------------------------
+Run this command to check:
+
+ls -la /var/www/html/VIDCHAT/client/dist/chat-app/browser/
+
+You should see these files:
+- index.html
+- main-YJRZTBOZ.js
+- polyfills-5CFQRCPP.js
+- styles-VRDYZCWE.css
+- favicon.ico
+- 3rdpartylicenses.txt
+- prerendered-routes.json
+
+If you DON'T see these files in the browser/ subdirectory:
+   1. Extract the "client" folder from vidchat-complete-deployment.zip
+   2. Upload it to /var/www/html/VIDCHAT/
+   3. Make sure the path is: /var/www/html/VIDCHAT/client/dist/chat-app/browser/
+
+
+STEP 6: Verify MongoDB Environment Variable
+--------------------------------------------
+cd /var/www/html/VIDCHAT/server
+echo $MONGODB_URL
+
+You should see your MongoDB Atlas connection string.
+If it's empty, set it again:
+
+export MONGODB_URL="mongodb+srv://sydplace1:yourpassword@cluster0.xxxxx.mongodb.net/VidChatApp?retryWrites=true&w=majority"
+
+(Replace with your actual MongoDB Atlas connection string)
+
+
+STEP 7: Start the Server
+-------------------------
+cd /var/www/html/VIDCHAT/server
+npm start
+
+IMPORTANT: Only run npm commands in the /server/ directory, NOT in the client/dist folder!
+
+
+STEP 8: Check Server Console Output
+------------------------------------
+After running "npm start", you should see:
+
+✓ Connected to MongoDB successfully
+Server running on https://localhost:3000
+Socket.io initialized for real-time chat
+PeerJS server running at /peerjs
+✓ Serving Angular frontend from: /var/www/html/VIDCHAT/client/dist/chat-app/browser
+
+If you see "✗ Angular frontend not found", the files are in the wrong location.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 4: TESTING THE DEPLOYMENT
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Open Browser
+--------------------
+Open Chrome or Firefox and go to:
+
+https://s5414889.elf.ict.griffith.edu.au:8443/proxy/3000/
+
+
+STEP 2: You Should See the Login Page
+--------------------------------------
+- NOT "socket hang up"
+- NOT a blank page
+- NOT a 500 error
+- You should see the Angular chat app login form
+
+
+STEP 3: Open Browser Console
+-----------------------------
+Press F12 to open Developer Tools
+Go to the "Console" tab
+
+
+STEP 4: Try to Login
+--------------------
+Username: super
+Password: 123
+
+
+STEP 5: Check for Success
+--------------------------
+✓ NO CORS errors in the console
+✓ NO "Access-Control-Allow-Origin" errors
+✓ Login succeeds
+✓ Redirected to dashboard
+
+If you still see CORS errors, send me screenshots of:
+1. Browser console (F12 → Console tab)
+2. Server terminal output (where you ran npm start)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 5: TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEM: "socket hang up" or 500 error
+SOLUTION:
+   - Check server is running: ps aux | grep "node server.js"
+   - Check server.js has correct path (with /browser at the end)
+   - Check Angular files exist at: /var/www/html/VIDCHAT/client/dist/chat-app/browser/
+
+PROBLEM: Server console shows "Angular frontend not found"
+SOLUTION:
+   - Files are in wrong location
+   - Should be at: /var/www/html/VIDCHAT/client/dist/chat-app/browser/
+   - NOT at: /var/www/html/VIDCHAT/client/dist/chat-app/ (missing browser/)
+
+PROBLEM: npm install fails with "package.json not found"
+SOLUTION:
+   - You're in the wrong directory!
+   - npm commands should ONLY be run in: /var/www/html/VIDCHAT/server/
+   - NOT in the client/dist/chat-app folder (that's just static HTML/JS files)
+
+PROBLEM: Server won't start - "port already in use"
+SOLUTION:
+   - Kill existing process: pkill -f "node server.js"
+   - Wait 2 seconds
+   - Try starting again: npm start
+
+PROBLEM: MongoDB connection failed
+SOLUTION:
+   - Check MONGODB_URL is set: echo $MONGODB_URL
+   - Make sure ELF server IP is whitelisted in MongoDB Atlas
+   - Verify the connection string is correct
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 6: IMPORTANT NOTES
+═══════════════════════════════════════════════════════════════════════════════
+
+1. DO NOT run npm install or npm start in the client/dist/chat-app folder
+   - That folder contains built static files (HTML, JS, CSS)
+   - npm commands are ONLY for the server/ folder
+
+2. The Angular dev server (ng serve) is NO LONGER NEEDED
+   - Don't try to run "ng serve" on the ELF server
+   - The Node.js server now serves both backend API and frontend files
+
+3. Access the app through: https://s5414889.elf.ict.griffith.edu.au:8443/proxy/3000/
+   - NOT https://localhost:4200
+   - NOT https://localhost:3000
+
+4. The path in server.js MUST include "/browser" at the end:
+   - CORRECT: ../client/dist/chat-app/browser
+   - WRONG:   ../client/dist/chat-app
+
+5. If you need to make changes to the Angular app:
+   - Edit the source files in client/chat-app/src/
+   - Rebuild with: ng build --configuration production
+   - Copy the new files from client/chat-app/dist/chat-app/browser/ to ELF server
+
+
+═══════════════════════════════════════════════════════════════════════════════
+SUMMARY OF WHAT CHANGED
+═══════════════════════════════════════════════════════════════════════════════
+
+1. server.js now looks for Angular files in ../client/dist/chat-app/browser/
+   (Added /browser at the end)
+
+2. Angular environment.prod.ts now uses relative URL: apiUrl: '/api'
+   (No more full URLs with https://s5414889...)
+
+3. Frontend and backend are served from same origin
+   (No more CORS issues!)
+
+4. You access everything through: https://s5414889.elf.ict.griffith.edu.au:8443/proxy/3000/
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+If you have any issues, send me screenshots of:
+1. Browser console (F12 → Console tab) showing any errors
+2. Server terminal output (where you ran npm start)
+3. The output of: ls -la /var/www/html/VIDCHAT/client/dist/chat-app/browser/
