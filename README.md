@@ -1,4 +1,31 @@
-# Chat System Assignment - Phase 1
+# Chat System Assignment - Phase 2
+
+## MongoDB Setup on ELF Server
+
+Before running the server, MongoDB must be installed on the ELF server:
+
+```bash
+ssh s5414889@elf.ict.griffith.edu.au
+
+wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+
+sudo systemctl start mongod
+sudo systemctl enable mongod
+
+mongosh
+use VidChatApp
+db.createCollection("users")
+db.createCollection("groups")
+db.createCollection("channels")
+db.createCollection("messages")
+exit
+```
+
+# Chat System Assignment - Phase 1 & Phase 2
 
 ## Git Repository Organization
 
@@ -50,22 +77,25 @@ Chat-system-assignment/
         └── channels.js
 
 
-## Data Structures
+## Data Structures (MongoDB Collections)
 
-### Users
+### Users Collection
 ```javascript
 {
-  id: number,
+  _id: number,
   username: string,
   email: string,
   password: string,
   roles: string[],        // ['User', 'Group Admin', 'Super Admin']
-  groups: number[]        // Array of group IDs user belongs to
+  groups: number[],       // Array of group IDs user belongs to
+  avatar: string | null   // Path to avatar image (/uploads/filename.jpg)
 }
+```
 
-##Groups
+### Groups Collection
+```javascript
 {
-  id: number,
+  _id: number,
   name: string,
   description: string,
   createdBy: number,      // User ID of creator
@@ -73,14 +103,31 @@ Chat-system-assignment/
   admins: number[],       // Array of user IDs with admin rights
   channels: number[]      // Array of channel IDs
 }
+```
 
-##Channels
+### Channels Collection
+```javascript
 {
-  id: number,
+  _id: number,
   name: string,
   groupId: number,
-  description: string
+  description: string,
+  members: number[]       // Array of user IDs
 }
+```
+
+### Messages Collection (Phase 2)
+```javascript
+{
+  _id: ObjectId,
+  channelId: number,
+  userId: number,
+  username: string,
+  content: string,
+  imageUrl: string | null,  // Path to image if message contains image
+  timestamp: Date
+}
+```
 
 #####
 Angular Architecture
@@ -201,3 +248,147 @@ Components use *ngIf with role checks to show/hide features
 Route guards prevent unauthorized access
 Dashboard dynamically loads admin panels based on user roles
 #####
+## REST API Routes (Continued)
+
+### Channel Management Routes (/api/channels)
+- GET: Get all channels
+- POST: Create new channel
+- PUT: Update channel
+- DELETE: Delete channel
+
+### Image Routes (/api/images) - Phase 2
+**POST /api/images/avatar**
+- Purpose: Upload user avatar image
+- Parameters: FormData with 'avatar' file
+- Returns: `{ success: boolean, avatarPath: string }`
+- Authentication: Required
+
+**POST /api/images/chat**
+- Purpose: Upload image for chat message
+- Parameters: FormData with 'image' file
+- Returns: `{ success: boolean, imagePath: string }`
+- Authentication: Required
+
+## Socket.io Events (Updated for Phase 2)
+
+**Client → Server:**
+- `join-channel`: Join a channel
+  - Data: `{ channelId, userId, username }`
+  - Response: Server sends `message-history` event with recent messages
+- `send-message`: Send a message
+  - Data: `{ channelId, userId, username, content, imageUrl? }`
+- `share-peer-id`: Share PeerJS ID for video calls
+  - Data: `{ channelId, peerId }`
+- `leave-channel`: Leave a channel
+  - Data: `{ channelId }`
+
+**Server → Client:**
+- `message-history`: Recent messages when joining channel (last 50)
+  - Data: Array of message objects
+- `new-message`: New message broadcast
+  - Data: Message object
+- `user-joined`: User joined notification
+  - Data: `{ username, message }`
+- `user-left`: User left notification
+  - Data: `{ username, message }`
+- `peer-id-shared`: Another user's PeerJS ID for video calls
+  - Data: `{ username, peerId }`
+
+## Phase 2 Features
+
+### MongoDB Integration
+- Replaced JSON file storage with MongoDB (native driver, no Mongoose)
+- Database: VidChatApp
+- Collections: users, groups, channels, messages
+- Connection: Uses MONGODB_URL environment variable
+
+### Socket.io Chat with Message History
+- Real-time chat messaging via Socket.io
+- Message history loaded when joining channel (last 50 messages)
+- Messages stored in MongoDB for persistence
+- Support for text and image messages
+
+### PeerJS Video Chat
+- WebRTC video chat using PeerJS
+- Server: ExpressPeerServer at /peerjs path
+- Client: PeerJS client library in Angular
+- Supports 2-person video calls within channels
+- Peer signaling through Socket.io events
+
+### Image Upload
+- Avatar images for user profiles
+- Images can be sent as chat messages
+- Stored in server/uploads/ directory
+- Paths stored in MongoDB
+- Max upload size: 5MB
+- Allowed formats: JPEG, JPG, PNG, GIF
+
+## Installation & Running
+
+### Server Setup (ELF Server)
+```bash
+cd /var/www/html/VIDCHAT/server
+npm install
+export MONGODB_URL="mongodb://localhost:27017"
+mkdir -p uploads
+npm start
+```
+
+Server runs at: https://s5414889.elf.ict.griffith.edu.au/VIDCHAT/server/
+
+### Frontend Setup (Local Development)
+```bash
+cd client/chat-app
+npm install
+ng serve --ssl
+```
+
+Access at: https://localhost:4200
+
+### Testing Between Two Devices
+1. Run frontend on your PC: `ng serve --ssl --host 0.0.0.0`
+2. Find your PC's local IP: `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+3. On phone/other device, navigate to: `https://[YOUR-PC-IP]:4200`
+4. Accept SSL certificate warning
+5. Both devices connect to deployed server at ELF
+6. Login with different users on each device
+7. Join same channel and test video chat
+
+## Testing
+
+### Server Tests
+```bash
+cd server
+npm test
+```
+
+### Angular Tests
+```bash
+cd client/chat-app
+ng test --watch=false
+```
+
+### E2E Tests
+```bash
+cd client/chat-app
+ng e2e
+```
+
+## Technology Stack
+
+### Backend (Phase 2)
+- Node.js with Express
+- MongoDB (native driver)
+- Socket.io for real-time chat
+- PeerJS (ExpressPeerServer) for video chat
+- Multer for file uploads
+- HTTPS with SSL certificates
+
+### Frontend
+- Angular 20.2.0
+- PeerJS client for WebRTC
+- Socket.io-client for real-time communication
+- Bootstrap 5.3.8 for styling
+
+## Assignment Due Date
+8am Wednesday 08 October 2025
