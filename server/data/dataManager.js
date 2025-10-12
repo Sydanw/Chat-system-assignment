@@ -1,244 +1,262 @@
-const jsonfile = require('jsonfile');
-const path = require('path');
+const { MongoClient } = require('mongodb');
 
-class DataManager {
+class MongoDBManager {
     constructor() {
-        this.dataFile = path.join(__dirname, 'chatData.json');
-        this.data = this.loadData();
+        this.url = process.env.MONGODB_URL || 'mongodb://localhost:27017';
+        this.dbName = 'VidChatApp';
+        this.client = null;
+        this.db = null;
     }
 
-    loadData() {
-        try {
-            return jsonfile.readFileSync(this.dataFile);
-        } catch (error) {
-            // Initialize with default super admin user
-            const defaultData = {
-                users: [
-                    {
-                        id: 1,
-                        username: 'super',
-                        email: 'super@admin.com',
-                        password: '123',
-                        roles: ['Super Admin'],
-                        groups: [1, 2, 3]
-                    },
-                    {
-                        id: 2,
-                        username: 'group_admin',
-                        email: 'group_admin@test.com',
-                        password: '123',
-                        roles: ['Group Admin'],
-                        groups: [2, 4]
-                    },
-                    {
-                        id: 3,
-                        username: 'john_doe',
-                        email: 'john@test.com',
-                        password: '123',
-                        roles: ['User'],
-                        groups: [1, 4, 5]
-                    }
-                ],
-                groups: [
-                    {
-                        id: 1,
-                        name: 'General Discussion',
-                        description: 'Main discussion group for all users',
-                        createdBy: 1,
-                        members: [1, 2, 3],
-                        admins: [1],
-                        channels: [1, 2, 3]
-                    },
-                    {
-                        id: 2,
-                        name: 'Development Team',
-                        description: 'Development team discussions',
-                        createdBy: 2,
-                        members: [1, 2],
-                        admins: [2],
-                        channels: [4, 5, 6]
-                    }
-                ],
-                channels: [
-                    {
-                        id: 1,
-                        name: 'general',
-                        description: 'General discussion channel',
-                        groupId: 1,
-                        members: [1, 2, 3]
-                    },
-                    {
-                        id: 2,
-                        name: 'announcements',
-                        description: 'Important announcements',
-                        groupId: 1,
-                        members: [1, 2, 3]
-                    },
-                    {
-                        id: 4,
-                        name: 'dev-general',
-                        description: 'Development general discussion',
-                        groupId: 2,
-                        members: [1, 2]
-                    }
-                ]
-            };
-            this.saveData(defaultData);
-            return defaultData;
+    async connect() {
+        if (!this.client) {
+            this.client = await MongoClient.connect(this.url, { 
+                useNewUrlParser: true, 
+                useUnifiedTopology: true 
+            });
+            this.db = this.client.db(this.dbName);
+            await this.initializeDefaultData();
+        }
+        return this.db;
+    }
+
+    async initializeDefaultData() {
+        const usersCount = await this.db.collection('users').countDocuments();
+        if (usersCount === 0) {
+            await this.db.collection('users').insertMany([
+                { 
+                    _id: 1, 
+                    username: 'super', 
+                    email: 'super@admin.com', 
+                    password: '123', 
+                    roles: ['Super Admin'], 
+                    groups: [1, 2, 3], 
+                    avatar: null 
+                },
+                { 
+                    _id: 2, 
+                    username: 'group_admin', 
+                    email: 'group_admin@test.com', 
+                    password: '123',
+                    roles: ['Group Admin'], 
+                    groups: [2, 4], 
+                    avatar: null 
+                },
+                { 
+                    _id: 3, 
+                    username: 'john_doe', 
+                    email: 'john@test.com', 
+                    password: '123',
+                    roles: ['User'], 
+                    groups: [1, 4, 5], 
+                    avatar: null 
+                }
+            ]);
+            
+            await this.db.collection('groups').insertMany([
+                { 
+                    _id: 1, 
+                    name: 'General Discussion', 
+                    description: 'Main discussion group',
+                    createdBy: 1, 
+                    members: [1, 2, 3], 
+                    admins: [1], 
+                    channels: [1, 2, 3] 
+                },
+                { 
+                    _id: 2, 
+                    name: 'Development Team', 
+                    description: 'Development team discussions',
+                    createdBy: 2, 
+                    members: [1, 2], 
+                    admins: [2], 
+                    channels: [4, 5, 6] 
+                }
+            ]);
+            
+            await this.db.collection('channels').insertMany([
+                { 
+                    _id: 1, 
+                    name: 'general', 
+                    description: 'General discussion channel',
+                    groupId: 1, 
+                    members: [1, 2, 3] 
+                },
+                { 
+                    _id: 2, 
+                    name: 'announcements', 
+                    description: 'Important announcements',
+                    groupId: 1, 
+                    members: [1, 2, 3] 
+                },
+                { 
+                    _id: 4, 
+                    name: 'dev-general', 
+                    description: 'Development general discussion',
+                    groupId: 2, 
+                    members: [1, 2] 
+                }
+            ]);
         }
     }
 
-    saveData(data = this.data) {
-        jsonfile.writeFileSync(this.dataFile, data, { spaces: 2 });
-        this.data = data;
+    async getUsers() {
+        await this.connect();
+        return await this.db.collection('users').find({}).toArray();
     }
 
-    // User operations
-    getUsers() {
-        return this.data.users;
+    async getUserById(id) {
+        await this.connect();
+        return await this.db.collection('users').findOne({ _id: parseInt(id) });
     }
 
-    getUserById(id) {
-        return this.data.users.find(user => user.id === id);
+    async getUserByUsername(username) {
+        await this.connect();
+        return await this.db.collection('users').findOne({ username });
     }
 
-    getUserByUsername(username) {
-        return this.data.users.find(user => user.username === username);
-    }
-
-    createUser(userData) {
-        // Fix: Handle empty users array
-        const maxId = this.data.users.length > 0 ? Math.max(...this.data.users.map(u => u.id)) : 0;
+    async createUser(userData) {
+        await this.connect();
+        const maxUser = await this.db.collection('users').find().sort({ _id: -1 }).limit(1).toArray();
+        const newId = maxUser.length > 0 ? maxUser[0]._id + 1 : 1;
         const newUser = {
-            id: maxId + 1,
+            _id: newId,
             ...userData,
             roles: userData.roles || ['User'],
-            groups: []
+            groups: [],
+            avatar: null
         };
-        this.data.users.push(newUser);
-        this.saveData();
+        await this.db.collection('users').insertOne(newUser);
         return newUser;
     }
 
-    updateUser(id, updates) {
-        const userIndex = this.data.users.findIndex(user => user.id === id);
-        if (userIndex !== -1) {
-            this.data.users[userIndex] = { ...this.data.users[userIndex], ...updates };
-            this.saveData();
-            return this.data.users[userIndex];
-        }
-        return null;
+    async updateUser(id, updates) {
+        await this.connect();
+        await this.db.collection('users').updateOne(
+            { _id: parseInt(id) },
+            { $set: updates }
+        );
+        return await this.getUserById(id);
     }
 
-    deleteUser(id) {
-        const userIndex = this.data.users.findIndex(user => user.id === id);
-        if (userIndex !== -1) {
-            this.data.users.splice(userIndex, 1);
-            this.saveData();
-            return true;
-        }
-        return false;
+    async deleteUser(id) {
+        await this.connect();
+        const result = await this.db.collection('users').deleteOne({ _id: parseInt(id) });
+        return result.deletedCount > 0;
     }
 
-    // Group operations
-    getGroups() {
-        return this.data.groups;
+    async getGroups() {
+        await this.connect();
+        return await this.db.collection('groups').find({}).toArray();
     }
 
-    getGroupById(id) {
-        return this.data.groups.find(group => group.id === id);
+    async getGroupById(id) {
+        await this.connect();
+        return await this.db.collection('groups').findOne({ _id: parseInt(id) });
     }
 
-    createGroup(groupData) {
-        // Fix: Handle empty groups array
-        const maxId = this.data.groups.length > 0 ? Math.max(...this.data.groups.map(g => g.id)) : 0;
+    async createGroup(groupData) {
+        await this.connect();
+        const maxGroup = await this.db.collection('groups').find().sort({ _id: -1 }).limit(1).toArray();
+        const newId = maxGroup.length > 0 ? maxGroup[0]._id + 1 : 1;
         const newGroup = {
-            id: maxId + 1,
+            _id: newId,
             ...groupData,
             members: [],
             admins: [groupData.createdBy],
             channels: []
         };
-        this.data.groups.push(newGroup);
-        this.saveData();
+        await this.db.collection('groups').insertOne(newGroup);
         return newGroup;
     }
 
-    updateGroup(id, updates) {
-        const groupIndex = this.data.groups.findIndex(group => group.id === id);
-        if (groupIndex !== -1) {
-            this.data.groups[groupIndex] = { ...this.data.groups[groupIndex], ...updates };
-            this.saveData();
-            return this.data.groups[groupIndex];
-        }
-        return null;
+    async updateGroup(id, updates) {
+        await this.connect();
+        await this.db.collection('groups').updateOne(
+            { _id: parseInt(id) },
+            { $set: updates }
+        );
+        return await this.getGroupById(id);
     }
 
-    deleteGroup(id) {
-        const groupIndex = this.data.groups.findIndex(group => group.id === id);
-        if (groupIndex !== -1) {
-            // Also remove associated channels
-            this.data.channels = this.data.channels.filter(c => c.groupId !== id);
-            this.data.groups.splice(groupIndex, 1);
-            this.saveData();
-            return true;
-        }
-        return false;
+    async deleteGroup(id) {
+        await this.connect();
+        await this.db.collection('channels').deleteMany({ groupId: parseInt(id) });
+        const result = await this.db.collection('groups').deleteOne({ _id: parseInt(id) });
+        return result.deletedCount > 0;
     }
 
-    // Channel operations
-    getChannels() {
-        return this.data.channels;
+    async getChannels() {
+        await this.connect();
+        return await this.db.collection('channels').find({}).toArray();
     }
 
-    getChannelById(id) {
-        return this.data.channels.find(channel => channel.id === id);
+    async getChannelById(id) {
+        await this.connect();
+        return await this.db.collection('channels').findOne({ _id: parseInt(id) });
     }
 
-    getChannelsByGroupId(groupId) {
-        return this.data.channels.filter(channel => channel.groupId === groupId);
+    async getChannelsByGroupId(groupId) {
+        await this.connect();
+        return await this.db.collection('channels').find({ groupId: parseInt(groupId) }).toArray();
     }
 
-    createChannel(channelData) {
-        // Fix: Handle empty channels array
-        const maxId = this.data.channels.length > 0 ? Math.max(...this.data.channels.map(c => c.id)) : 0;
+    async createChannel(channelData) {
+        await this.connect();
+        const maxChannel = await this.db.collection('channels').find().sort({ _id: -1 }).limit(1).toArray();
+        const newId = maxChannel.length > 0 ? maxChannel[0]._id + 1 : 1;
         const newChannel = {
-            id: maxId + 1,
+            _id: newId,
             ...channelData,
             members: channelData.members || []
         };
-        this.data.channels.push(newChannel);
-        this.saveData();
+        await this.db.collection('channels').insertOne(newChannel);
         return newChannel;
     }
 
-    updateChannel(id, updates) {
-        const channelIndex = this.data.channels.findIndex(channel => channel.id === id);
-        if (channelIndex !== -1) {
-            this.data.channels[channelIndex] = { ...this.data.channels[channelIndex], ...updates };
-            this.saveData();
-            return this.data.channels[channelIndex];
-        }
-        return null;
+    async updateChannel(id, updates) {
+        await this.connect();
+        await this.db.collection('channels').updateOne(
+            { _id: parseInt(id) },
+            { $set: updates }
+        );
+        return await this.getChannelById(id);
     }
 
-    deleteChannel(id) {
-        const channelIndex = this.data.channels.findIndex(channel => channel.id === id);
-        if (channelIndex !== -1) {
-            const channel = this.data.channels[channelIndex];
-            
-            // Remove channel from group's channels array
-            const group = this.data.groups.find(g => g.id === channel.groupId);
-            if (group) {
-                group.channels = group.channels.filter(cId => cId !== id);
-            }
-            
-            this.data.channels.splice(channelIndex, 1);
-            this.saveData();
-            return true;
+    async deleteChannel(id) {
+        await this.connect();
+        const channel = await this.getChannelById(id);
+        if (channel) {
+            await this.db.collection('groups').updateOne(
+                { _id: channel.groupId },
+                { $pull: { channels: parseInt(id) } }
+            );
         }
-        return false;
+        const result = await this.db.collection('channels').deleteOne({ _id: parseInt(id) });
+        return result.deletedCount > 0;
+    }
+
+    async createMessage(messageData) {
+        await this.connect();
+        const message = {
+            ...messageData,
+            channelId: parseInt(messageData.channelId),
+            userId: parseInt(messageData.userId),
+            timestamp: messageData.timestamp || new Date()
+        };
+        const result = await this.db.collection('messages').insertOne(message);
+        return { _id: result.insertedId, ...message };
+    }
+
+    async getMessagesByChannel(channelId, limit = 50) {
+        await this.connect();
+        return await this.db.collection('messages')
+            .find({ channelId: parseInt(channelId) })
+            .sort({ timestamp: -1 })
+            .limit(limit)
+            .toArray()
+            .then(messages => messages.reverse());
     }
 }
 
-module.exports = new DataManager();
+module.exports = new MongoDBManager();

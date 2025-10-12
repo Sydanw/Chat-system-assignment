@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { SessionService } from '../../services/session.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -69,10 +70,9 @@ export class LoginComponent {
     }
   }
 
-  // Test connection to backend
   testConnection(): void {
     console.log('Testing connection to backend...');
-    fetch('http://localhost:3000/api/users')
+    fetch(environment.apiUrl + '/users')
       .then(response => {
         console.log('Backend response status:', response.status);
         return response.json();

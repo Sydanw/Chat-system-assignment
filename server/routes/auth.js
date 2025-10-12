@@ -2,57 +2,71 @@ const express = require('express');
 const router = express.Router();
 const dataManager = require('../data/dataManager');
 
-// Login route
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     
-    const user = dataManager.getUserByUsername(username);
-    
-    if (user && user.password === password) {
-        req.session.userId = user.id;
-        req.session.username = user.username;
-        req.session.roles = user.roles;
-        req.session.loginTime = new Date();
+    try {
+        const user = await dataManager.getUserByUsername(username);
         
-        const { password: _, ...userWithoutPassword } = user;
-        res.json({
-            success: true,
-            user: userWithoutPassword,
-            message: 'Login successful'
-        });
-    } else {
-        res.status(401).json({
+        if (user && user.password === password) {
+            req.session.userId = user._id;
+            req.session.username = user.username;
+            req.session.roles = user.roles;
+            req.session.loginTime = new Date();
+            
+            const { password: _, ...userWithoutPassword } = user;
+            res.json({
+                success: true,
+                user: userWithoutPassword,
+                message: 'Login successful'
+            });
+        } else {
+            res.status(401).json({
+                success: false,
+                message: 'Invalid username or password'
+            });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
             success: false,
-            message: 'Invalid username or password'
+            message: 'Server error'
         });
     }
 });
 
-// Register route (for Super Admin to create users)
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
     const { username, email, password, roles } = req.body;
     
-    // Check if username already exists
-    if (dataManager.getUserByUsername(username)) {
-        return res.status(400).json({
+    try {
+        const existingUser = await dataManager.getUserByUsername(username);
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Username already exists'
+            });
+        }
+        
+        const newUser = await dataManager.createUser({
+            username,
+            email,
+            password,
+            roles: roles || ['User']
+        });
+        
+        const { password: _, ...userWithoutPassword } = newUser;
+        res.status(201).json({
+            success: true,
+            user: userWithoutPassword,
+            message: 'User created successfully'
+        });
+    } catch (error) {
+        console.error('Register error:', error);
+        res.status(500).json({
             success: false,
-            message: 'Username already exists'
+            message: 'Server error'
         });
     }
-    
-    const newUser = dataManager.createUser({
-        username,
-        email,
-        password,
-        roles: roles || ['User']
-    });
-    
-    const { password: _, ...userWithoutPassword } = newUser;
-    res.status(201).json({
-        success: true,
-        user: userWithoutPassword,
-        message: 'User created successfully'
-    });
 });
 
 router.post('/logout', (req, res) => {
@@ -71,22 +85,30 @@ router.post('/logout', (req, res) => {
     });
 });
 
-router.get('/validate-session', (req, res) => {
-    if (req.session && req.session.userId) {
-        const user = dataManager.getUserById(req.session.userId);
-        if (user) {
-            const { password: _, ...userWithoutPassword } = user;
-            return res.json({
-                success: true,
-                user: userWithoutPassword
-            });
+router.get('/validate-session', async (req, res) => {
+    try {
+        if (req.session && req.session.userId) {
+            const user = await dataManager.getUserById(req.session.userId);
+            if (user) {
+                const { password: _, ...userWithoutPassword } = user;
+                return res.json({
+                    success: true,
+                    user: userWithoutPassword
+                });
+            }
         }
+        
+        res.status(401).json({
+            success: false,
+            message: 'Invalid session'
+        });
+    } catch (error) {
+        console.error('Validate session error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
     }
-    
-    res.status(401).json({
-        success: false,
-        message: 'Invalid session'
-    });
 });
 
 module.exports = router;
