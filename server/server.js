@@ -14,6 +14,7 @@ const groupRoutes = require('./routes/groups');
 const channelRoutes = require('./routes/channels');
 const imageRoutes = require('./routes/images');
 const { initializeSocket } = require('./sockets');
+const dataManager = require('./data/dataManager');
 
 const app = express();
 
@@ -81,11 +82,26 @@ app.use('/api/images', imageRoutes);
 
 initializeSocket(io);
 
-server.listen(PORT, () => {
-    const protocol = fs.existsSync('key.pem') ? 'https' : 'http';
-    console.log(`Server running on ${protocol}://localhost:${PORT}`);
-    console.log('Socket.io initialized for real-time chat');
-    console.log('PeerJS server running at /peerjs');
-});
+async function startServer() {
+    try {
+        await dataManager.connect();
+        console.log('✓ Connected to MongoDB successfully');
+    } catch (error) {
+        console.error('✗ MongoDB connection failed:', error.message);
+        console.error('Please check:');
+        console.error('1. MONGODB_URL environment variable is set');
+        console.error('2. ELF server IP is whitelisted in MongoDB Atlas');
+        console.error('3. MongoDB Atlas credentials are correct');
+    }
+    
+    server.listen(PORT, () => {
+        const protocol = fs.existsSync('key.pem') ? 'https' : 'http';
+        console.log(`Server running on ${protocol}://localhost:${PORT}`);
+        console.log('Socket.io initialized for real-time chat');
+        console.log('PeerJS server running at /peerjs');
+    });
+}
+
+startServer();
 
 module.exports = app;
