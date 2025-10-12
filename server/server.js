@@ -34,7 +34,10 @@ peerServer.on('connection', (client) => {
 const io = socketIo(server, {
     cors: {
         origin: (origin, callback) => {
-            if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+            if (!origin || 
+                origin.startsWith('http://localhost:') || 
+                origin.startsWith('https://localhost:') ||
+                origin === 'https://s5414889.elf.ict.griffith.edu.au:8443') {
                 callback(null, true);
             } else {
                 callback(new Error('Not allowed by CORS'));
@@ -67,8 +70,10 @@ app.use(cors({
             return callback(null, true);
         }
         
-        if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
-            console.log('CORS: Localhost origin detected - allowing');
+        if (origin.startsWith('http://localhost:') || 
+            origin.startsWith('https://localhost:') ||
+            origin === 'https://s5414889.elf.ict.griffith.edu.au:8443') {
+            console.log('CORS: Origin allowed - ' + origin);
             return callback(null, true);
         }
         
@@ -87,7 +92,9 @@ app.use((req, res, next) => {
     const origin = req.headers.origin;
     console.log('Manual CORS Middleware: Processing request from origin:', origin);
     
-    if (origin && (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:'))) {
+    if (origin && (origin.startsWith('http://localhost:') || 
+                   origin.startsWith('https://localhost:') ||
+                   origin === 'https://s5414889.elf.ict.griffith.edu.au:8443')) {
         console.log('Manual CORS Middleware: Setting CORS headers for', origin);
         res.header('Access-Control-Allow-Origin', origin);
         res.header('Access-Control-Allow-Credentials', 'true');
@@ -115,13 +122,21 @@ app.use('/api/images', imageRoutes);
 
 const clientDistPath = path.join(__dirname, '../client/dist/chat-app/browser');
 if (fs.existsSync(clientDistPath)) {
+    app.use('/proxy/3000', express.static(clientDistPath));
+    
     app.use(express.static(clientDistPath));
+    
+    app.get('/proxy/3000/*', (req, res) => {
+        res.sendFile(path.join(clientDistPath, 'index.html'));
+    });
+    
     app.get('*', (req, res) => {
-        if (!req.path.startsWith('/api') && !req.path.startsWith('/peerjs') && !req.path.startsWith('/uploads')) {
+        if (!req.path.startsWith('/api') && !req.path.startsWith('/peerjs') && !req.path.startsWith('/uploads') && !req.path.startsWith('/proxy/3000')) {
             res.sendFile(path.join(clientDistPath, 'index.html'));
         }
     });
     console.log('✓ Serving Angular frontend from:', clientDistPath);
+    console.log('✓ Static files available at both / and /proxy/3000/');
 } else {
     console.warn('✗ Angular frontend not found at:', clientDistPath);
     console.warn('Please deploy the Angular built files to:', clientDistPath);
