@@ -47,7 +47,13 @@ peerServer.on('connection', (client) => {
 
 const io = socketIo(server, {
     cors: {
-        origin: ["http://localhost:4200", "https://localhost:4200"],
+        origin: (origin, callback) => {
+            if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -67,9 +73,50 @@ app.use(session({
 }));
 
 app.use(cors({
-    origin: ['http://localhost:4200', 'https://localhost:4200'],
-    credentials: true
+    origin: (origin, callback) => {
+        console.log('CORS: Received request from origin:', origin);
+        
+        if (!origin) {
+            console.log('CORS: No origin header (server-to-server request) - allowing');
+            return callback(null, true);
+        }
+        
+        if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+            console.log('CORS: Localhost origin detected - allowing');
+            return callback(null, true);
+        }
+        
+        console.log('CORS: Origin not in whitelist - blocking');
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200
 }));
+
+app.options('*', cors());
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    console.log('Manual CORS Middleware: Processing request from origin:', origin);
+    
+    if (origin && (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:'))) {
+        console.log('Manual CORS Middleware: Setting CORS headers for', origin);
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+    
+    if (req.method === 'OPTIONS') {
+        console.log('Manual CORS Middleware: Responding to OPTIONS preflight');
+        return res.sendStatus(200);
+    }
+    
+    next();
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
