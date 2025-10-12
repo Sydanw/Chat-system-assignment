@@ -127,6 +127,20 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/images', imageRoutes);
 
+const clientDistPath = path.join(__dirname, '../client/dist/chat-app');
+if (fs.existsSync(clientDistPath)) {
+    app.use(express.static(clientDistPath));
+    app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api') && !req.path.startsWith('/peerjs') && !req.path.startsWith('/uploads')) {
+            res.sendFile(path.join(clientDistPath, 'index.html'));
+        }
+    });
+    console.log('Serving Angular frontend from:', clientDistPath);
+} else {
+    console.warn('Angular frontend not found at:', clientDistPath);
+    console.warn('Build the Angular app and deploy it to ../client/dist/chat-app/');
+}
+
 initializeSocket(io);
 
 async function startServer() {
