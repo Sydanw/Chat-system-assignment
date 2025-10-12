@@ -1,29 +1,40 @@
 # Chat System Assignment - Phase 2
 
-## MongoDB Setup on ELF Server
+## MongoDB Setup Using MongoDB Atlas (Cloud Database)
 
-Before running the server, MongoDB must be installed on the ELF server:
+Since the ELF server doesn't have sudo access, we use MongoDB Atlas (free cloud-hosted MongoDB) instead of local installation.
 
-```bash
-ssh s5414889@elf.ict.griffith.edu.au
+### Step 1: Create MongoDB Atlas Account (Already Done ✓)
+You've already created your Atlas account and cluster at https://cloud.mongodb.com/
 
-wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+**Your Atlas Credentials:**
+- Username: `sydplace1`
+- Password: `256811471002613` (⚠️ Keep this secure!)
+- Cluster: `vidchatdb`
+- Database: `VidChatApp`
 
-sudo apt-get update
-sudo apt-get install -y mongodb-org
+### Step 2: Configure IP Whitelist for ELF Server
+**CRITICAL:** You must add the ELF server's IP address to MongoDB Atlas Access List, otherwise the server cannot connect.
 
-sudo systemctl start mongod
-sudo systemctl enable mongod
+1. Log into MongoDB Atlas: https://cloud.mongodb.com/
+2. Click "Network Access" in the left sidebar
+3. Click "Add IP Address"
+4. You need to find the ELF server's public IP address. SSH into ELF and run:
+   ```bash
+   curl ifconfig.me
+   ```
+5. Add this IP address to the Access List in MongoDB Atlas
+6. Your current PC IP (132.234.228.114) is already whitelisted for local testing
 
-mongosh
-use VidChatApp
-db.createCollection("users")
-db.createCollection("groups")
-db.createCollection("channels")
-db.createCollection("messages")
-exit
+**Alternatively:** You can whitelist all IPs by adding `0.0.0.0/0` (less secure but simpler for testing)
+
+### Step 3: Connection String
+Your MongoDB Atlas connection string:
 ```
+mongodb+srv://sydplace1:256811471002613@vidchatdb.ynrkz3c.mongodb.net/?retryWrites=true&w=majority&appName=vidchatdb
+```
+
+The application will automatically create the `VidChatApp` database and collections (users, groups, channels, messages) on first connection.
 
 # Chat System Assignment - Phase 1 & Phase 2
 
@@ -326,13 +337,35 @@ Dashboard dynamically loads admin panels based on user roles
 ## Installation & Running
 
 ### Server Setup (ELF Server)
+
+**Prerequisites:**
+1. MongoDB Atlas cluster created (✓ Done)
+2. ELF server IP added to Atlas Access List (⚠️ Required - see Step 2 above)
+
+**Deployment Steps:**
 ```bash
+ssh s5414889@elf.ict.griffith.edu.au
 cd /var/www/html/VIDCHAT/server
+
 npm install
-export MONGODB_URL="mongodb://localhost:27017"
+
+export MONGODB_URL="mongodb+srv://sydplace1:256811471002613@vidchatdb.ynrkz3c.mongodb.net/?retryWrites=true&w=majority&appName=vidchatdb"
+
 mkdir -p uploads
+
 npm start
 ```
+
+**Important Notes:**
+- The `MONGODB_URL` environment variable contains your Atlas connection string
+- This environment variable must be set every time you start the server
+- Consider adding it to your shell profile (~/.bashrc or ~/.bash_profile) for persistence:
+  ```bash
+  echo 'export MONGODB_URL="mongodb+srv://sydplace1:256811471002613@vidchatdb.ynrkz3c.mongodb.net/?retryWrites=true&w=majority&appName=vidchatdb"' >> ~/.bashrc
+  source ~/.bashrc
+  ```
+- The database will be automatically initialized with default users on first connection
+- Default test users: super/123, group_admin/123, john_doe/123
 
 Server runs at: https://s5414889.elf.ict.griffith.edu.au/VIDCHAT/server/
 
