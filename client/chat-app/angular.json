@@ -31,6 +31,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/proxy/3000/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
