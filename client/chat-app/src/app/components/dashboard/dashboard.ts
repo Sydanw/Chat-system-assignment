@@ -11,12 +11,13 @@ import { Router } from '@angular/router';
 import { AdminPanel } from '../admin-panel/admin-panel';
 import { GroupManagement } from '../group-management/group-management';
 import { ChannelView } from '../channel-view/channel-view';
+import { VideoChatComponent } from '../video-chat/video-chat.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, AdminPanel, GroupManagement, ChannelView],
+  imports: [CommonModule, FormsModule, AdminPanel, GroupManagement, ChannelView, VideoChatComponent],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -38,10 +39,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onlineMembers: number = 15;
   
   showCreateUserForm: boolean = false;
+  showCreateChannelForm: boolean = false;
+  showVideoChat: boolean = false;
   newUser: any = {
     username: '',
     email: '',
     password: ''
+  };
+  newChannel: any = {
+    name: '',
+    description: '',
+    groupId: null
   };
   
   private messagesSubscription: Subscription = new Subscription();
@@ -361,6 +369,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
         error: (error: any) => {
           console.error('Error removing user:', error);
           alert('Failed to remove user');
+        }
+      });
+    }
+  }
+
+  toggleVideoChat(): void {
+    this.showVideoChat = !this.showVideoChat;
+  }
+
+  createChannel(): void {
+    if (!this.newChannel.name || !this.newChannel.groupId) {
+      alert('Please fill in channel name and select a group');
+      return;
+    }
+    
+    this.channelService.createChannel(this.newChannel).subscribe({
+      next: (response: any) => {
+        console.log('Channel created successfully:', response);
+        this.loadChannels();
+        this.cancelCreateChannel();
+        alert('Channel created successfully!');
+      },
+      error: (error: any) => {
+        console.error('Error creating channel:', error);
+        alert(error.error?.message || 'Failed to create channel');
+      }
+    });
+  }
+  
+  cancelCreateChannel(): void {
+    this.showCreateChannelForm = false;
+    this.newChannel = { name: '', description: '', groupId: null };
+  }
+
+  deleteChannel(channelId: number): void {
+    if (confirm('Are you sure you want to delete this channel?')) {
+      this.channelService.deleteChannel(channelId).subscribe({
+        next: () => {
+          console.log('Channel deleted successfully');
+          this.channels = this.channels.filter(c => c.id !== channelId);
+          this.loadSystemStats();
+          alert('Channel deleted successfully!');
+        },
+        error: (error: any) => {
+          console.error('Error deleting channel:', error);
+          alert('Failed to delete channel');
         }
       });
     }

@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
+import { Message } from '../models/message.model';
 
 @Injectable({
   providedIn: 'root'
@@ -65,14 +66,15 @@ export class SocketService {
     });
   }
 
-  sendMessage(channelId: number, content: string): void {
+  sendMessage(channelId: number, content: string, imageUrl?: string): void {
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser && content.trim()) {
+    if (currentUser && (content.trim() || imageUrl)) {
       this.socket.emit('send-message', {
         channelId: channelId,
         userId: currentUser.id,
         username: currentUser.username,
-        content: content.trim()
+        content: content.trim(),
+        imageUrl: imageUrl || null
       });
     }
   }
@@ -89,5 +91,51 @@ export class SocketService {
     if (this.socket) {
       this.socket.disconnect();
     }
+  }
+
+  onMessage(): Observable<Message> {
+    return new Observable(observer => {
+      this.socket.on('new-message', (message: Message) => {
+        observer.next(message);
+      });
+    });
+  }
+
+  onUserJoined(): Observable<{username: string, message: string}> {
+    return new Observable(observer => {
+      this.socket.on('user-joined', (data: {username: string, message: string}) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  onUserLeft(): Observable<{username: string, message: string}> {
+    return new Observable(observer => {
+      this.socket.on('user-left', (data: {username: string, message: string}) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  registerPeerID(peerID: string, channelId: string | number): void {
+    console.log('📡 Registering peer ID:', peerID, 'in channel:', channelId);
+    this.socket.emit('share-peer-id', { channelId: channelId.toString(), peerId: peerID });
+  }
+
+  onPeerIDAvailable(): Observable<string> {
+    return new Observable(observer => {
+      this.socket.on('peer-id-shared', (data: {username: string, peerId: string}) => {
+        console.log('📡 Received peer-id-shared event:', data);
+        observer.next(data.peerId);
+      });
+    });
+  }
+
+  onMessageHistory(): Observable<Message[]> {
+    return new Observable(observer => {
+      this.socket.on('message-history', (messages: Message[]) => {
+        observer.next(messages);
+      });
+    });
   }
 }

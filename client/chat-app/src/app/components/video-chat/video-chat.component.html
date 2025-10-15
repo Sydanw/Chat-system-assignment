@@ -1,0 +1,80 @@
+<div class="video-chat-container">
+  <div class="video-streams">
+    <!-- Local Video -->
+    <div class="video-stream local-stream" [class.minimized]="remotePeerConnected">
+      <video #localVideo autoplay muted playsinline [style.display]="isVideoEnabled ? 'block' : 'none'"></video>
+      <div class="video-placeholder" *ngIf="!isVideoEnabled">
+        <i class="fas fa-user-circle fa-4x"></i>
+        <p>You (Camera Off)</p>
+      </div>
+      <div class="stream-label">You</div>
+    </div>
+
+    <!-- Remote Video -->
+    <div class="video-stream remote-stream">
+      <video #remoteVideo autoplay muted="false" playsinline [style.display]="remotePeerConnected ? 'block' : 'none'"></video>
+      <div class="video-placeholder" *ngIf="!remotePeerConnected && (isVideoEnabled || isAudioEnabled)">
+        <i class="fas fa-clock fa-2x mb-2"></i>
+        <p>Waiting for someone to join...</p>
+        <small class="text-muted">
+          • Open another browser tab/window<br>
+          • Login as a different user<br>
+          • Join the same channel<br>
+          • Click "Start Video"
+        </small>
+      </div>
+      <div class="stream-label" *ngIf="remotePeerConnected">Remote User</div>
+    </div>
+  </div>
+
+  <!-- Video Controls -->
+  <div class="video-controls">
+    <div class="control-buttons">
+      <!-- Video Toggle -->
+      <button
+        class="btn control-btn"
+        [class.btn-danger]="!isVideoEnabled"
+        [class.btn-success]="isVideoEnabled"
+        (click)="toggleVideo()"
+        [disabled]="!isConnected"
+      >
+        <i class="fas" [class.fa-video]="isVideoEnabled" [class.fa-video-slash]="!isVideoEnabled"></i>
+      </button>
+
+      <!-- Audio Toggle -->
+      <button
+        class="btn control-btn"
+        [class.btn-danger]="!isAudioEnabled"
+        [class.btn-success]="isAudioEnabled"
+        (click)="toggleAudio()"
+        [disabled]="!isConnected"
+      >
+        <i class="fas" [class.fa-microphone]="isAudioEnabled" [class.fa-microphone-slash]="!isAudioEnabled"></i>
+      </button>
+
+      <!-- End Call -->
+      <button
+        class="btn btn-danger control-btn"
+        (click)="endCall()"
+        *ngIf="isInCall"
+      >
+        <i class="fas fa-phone-slash"></i>
+      </button>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status">
+      <div class="status-indicator" [ngClass]="{'connected': isConnected, 'disconnected': !isConnected}">
+        <i class="fas" [class.fa-circle]="isConnected" [class.fa-exclamation-triangle]="!isConnected"></i>
+        {{ isConnected ? 'Peer Connected' : 'Connecting...' }}
+      </div>
+      <div class="call-status" *ngIf="isInCall">
+        <i class="fas fa-phone text-success me-1"></i>
+        {{ remotePeerConnected ? 'In Call' : 'Calling...' }}
+      </div>
+      <small class="text-muted d-block" *ngIf="isVideoEnabled && !remotePeerConnected">
+        For peer-to-peer video to work, you need two users with video enabled in the same channel
+      </small>
+    </div>
+  </div>
+</div>

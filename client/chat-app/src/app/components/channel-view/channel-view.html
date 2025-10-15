@@ -17,7 +17,10 @@
             {{ formatTimestamp(message.timestamp) }}
           </span>
         </div>
-        <div class="message-content">{{ message.content }}</div>
+        <div class="message-content" *ngIf="message.content">{{ message.content }}</div>
+        <div class="message-image" *ngIf="message.imageUrl">
+          <img [src]="message.imageUrl" alt="Shared image" style="max-width: 300px; border-radius: 8px;">
+        </div>
       </div>
       
       <div class="read-indicator" *ngIf="messages.length > 0">
@@ -27,7 +30,24 @@
   </div>
   
   <div class="message-input-container">
+    <div class="image-preview" *ngIf="imagePreview">
+      <img [src]="imagePreview" alt="Preview" style="max-height: 100px;">
+      <button class="btn btn-sm btn-danger" (click)="cancelImageUpload()">✕</button>
+    </div>
     <div class="message-input">
+      <input 
+        type="file" 
+        accept="image/*" 
+        #fileInput 
+        (change)="onImageSelected($event)" 
+        style="display: none;">
+      <button 
+        class="btn btn-secondary" 
+        (click)="fileInput.click()"
+        [disabled]="uploadingImage"
+        title="Upload image">
+        📷
+      </button>
       <input 
         type="text" 
         class="form-control"

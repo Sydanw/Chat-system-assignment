@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import Peer, { MediaConnection } from 'peerjs';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -18,12 +19,7 @@ export class PeerService {
 
   async initializePeer(userId: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.peer = new Peer(`user-${userId}-${Date.now()}`, {
-        host: 's5414889.elf.ict.griffith.edu.au',
-        port: 443,
-        path: '/VIDCHAT/server/peerjs',
-        secure: true
-      });
+      this.peer = new Peer(`user-${userId}-${Date.now()}`, environment.peerConfig);
 
       this.peer.on('open', (id) => {
         this.peerId$.next(id);

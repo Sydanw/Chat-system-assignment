@@ -1,4 +1,10 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://s5414889.elf.ict.griffith.edu.au:8443/proxy/3000/api',
+  apiUrl: 'http://localhost:3000/api',
+  peerConfig: {
+    host: 'localhost',
+    port: 3000,
+    path: '/peerjs',
+    secure: false
+  }
 };

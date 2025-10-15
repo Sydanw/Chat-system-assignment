@@ -8,6 +8,17 @@ class MongoDBManager {
         this.db = null;
     }
 
+    transformDocument(doc) {
+        if (!doc) return null;
+        const result = { ...doc, id: doc._id };
+        delete result._id;
+        return result;
+    }
+
+    transformDocuments(docs) {
+        return docs.map(doc => this.transformDocument(doc));
+    }
+
     async connect() {
         if (!this.client) {
             this.client = await MongoClient.connect(this.url, { 
@@ -102,17 +113,20 @@ class MongoDBManager {
 
     async getUsers() {
         await this.connect();
-        return await this.db.collection('users').find({}).toArray();
+        const users = await this.db.collection('users').find({}).toArray();
+        return this.transformDocuments(users);
     }
 
     async getUserById(id) {
         await this.connect();
-        return await this.db.collection('users').findOne({ _id: parseInt(id) });
+        const user = await this.db.collection('users').findOne({ _id: parseInt(id) });
+        return this.transformDocument(user);
     }
 
     async getUserByUsername(username) {
         await this.connect();
-        return await this.db.collection('users').findOne({ username });
+        const user = await this.db.collection('users').findOne({ username });
+        return this.transformDocument(user);
     }
 
     async createUser(userData) {
@@ -127,7 +141,7 @@ class MongoDBManager {
             avatar: null
         };
         await this.db.collection('users').insertOne(newUser);
-        return newUser;
+        return this.transformDocument(newUser);
     }
 
     async updateUser(id, updates) {
@@ -136,7 +150,8 @@ class MongoDBManager {
             { _id: parseInt(id) },
             { $set: updates }
         );
-        return await this.getUserById(id);
+        const user = await this.db.collection('users').findOne({ _id: parseInt(id) });
+        return this.transformDocument(user);
     }
 
     async deleteUser(id) {
@@ -147,12 +162,14 @@ class MongoDBManager {
 
     async getGroups() {
         await this.connect();
-        return await this.db.collection('groups').find({}).toArray();
+        const groups = await this.db.collection('groups').find({}).toArray();
+        return this.transformDocuments(groups);
     }
 
     async getGroupById(id) {
         await this.connect();
-        return await this.db.collection('groups').findOne({ _id: parseInt(id) });
+        const group = await this.db.collection('groups').findOne({ _id: parseInt(id) });
+        return this.transformDocument(group);
     }
 
     async createGroup(groupData) {
@@ -167,7 +184,7 @@ class MongoDBManager {
             channels: []
         };
         await this.db.collection('groups').insertOne(newGroup);
-        return newGroup;
+        return this.transformDocument(newGroup);
     }
 
     async updateGroup(id, updates) {
@@ -176,7 +193,8 @@ class MongoDBManager {
             { _id: parseInt(id) },
             { $set: updates }
         );
-        return await this.getGroupById(id);
+        const group = await this.db.collection('groups').findOne({ _id: parseInt(id) });
+        return this.transformDocument(group);
     }
 
     async deleteGroup(id) {
@@ -188,17 +206,20 @@ class MongoDBManager {
 
     async getChannels() {
         await this.connect();
-        return await this.db.collection('channels').find({}).toArray();
+        const channels = await this.db.collection('channels').find({}).toArray();
+        return this.transformDocuments(channels);
     }
 
     async getChannelById(id) {
         await this.connect();
-        return await this.db.collection('channels').findOne({ _id: parseInt(id) });
+        const channel = await this.db.collection('channels').findOne({ _id: parseInt(id) });
+        return this.transformDocument(channel);
     }
 
     async getChannelsByGroupId(groupId) {
         await this.connect();
-        return await this.db.collection('channels').find({ groupId: parseInt(groupId) }).toArray();
+        const channels = await this.db.collection('channels').find({ groupId: parseInt(groupId) }).toArray();
+        return this.transformDocuments(channels);
     }
 
     async createChannel(channelData) {
@@ -211,7 +232,7 @@ class MongoDBManager {
             members: channelData.members || []
         };
         await this.db.collection('channels').insertOne(newChannel);
-        return newChannel;
+        return this.transformDocument(newChannel);
     }
 
     async updateChannel(id, updates) {
@@ -220,7 +241,8 @@ class MongoDBManager {
             { _id: parseInt(id) },
             { $set: updates }
         );
-        return await this.getChannelById(id);
+        const channel = await this.db.collection('channels').findOne({ _id: parseInt(id) });
+        return this.transformDocument(channel);
     }
 
     async deleteChannel(id) {
@@ -250,12 +272,12 @@ class MongoDBManager {
 
     async getMessagesByChannel(channelId, limit = 50) {
         await this.connect();
-        return await this.db.collection('messages')
+        const messages = await this.db.collection('messages')
             .find({ channelId: parseInt(channelId) })
             .sort({ timestamp: -1 })
             .limit(limit)
-            .toArray()
-            .then(messages => messages.reverse());
+            .toArray();
+        return this.transformDocuments(messages.reverse());
     }
 }
 
