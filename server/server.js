@@ -80,6 +80,28 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/images', imageRoutes);
 
+const clientDistPath = path.join(__dirname, '../client/chat-app/dist/chat-app/browser');
+if (fs.existsSync(clientDistPath)) {
+    app.use('/proxy/3000', express.static(clientDistPath));
+    
+    app.use(express.static(clientDistPath));
+    
+    app.get('/proxy/3000/*', (req, res) => {
+        res.sendFile(path.join(clientDistPath, 'index.html'));
+    });
+    
+    app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api') && !req.path.startsWith('/peerjs') && !req.path.startsWith('/uploads') && !req.path.startsWith('/proxy/3000')) {
+            res.sendFile(path.join(clientDistPath, 'index.html'));
+        }
+    });
+    console.log('✓ Serving Angular frontend from:', clientDistPath);
+    console.log('✓ Static files available at both / and /proxy/3000/');
+} else {
+    console.warn('✗ Angular frontend not found at:', clientDistPath);
+    console.warn('Please deploy the Angular built files to:', clientDistPath);
+}
+
 initializeSocket(io);
 
 async function startServer() {
