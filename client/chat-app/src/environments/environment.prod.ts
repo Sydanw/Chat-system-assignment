@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',
+  apiUrl: '/proxy/3000/api',
   peerConfig: {
     host: 's5414889.elf.ict.griffith.edu.au',
     port: 8443,
